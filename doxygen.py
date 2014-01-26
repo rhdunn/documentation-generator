@@ -45,7 +45,7 @@ def _parse_memberdef_node(xml, item):
 		elif child.name == 'name':
 			varname = child.text()
 		elif child.name == 'argsstring':
-			args = '%s%s' % (member.signature, child.text())
+			args = child.text()
 	if xml['kind'] in ['enum']:
 		member.signature = '%s %s' % (xml['kind'], varname)
 	elif args:
