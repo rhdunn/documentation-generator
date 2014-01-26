@@ -26,7 +26,10 @@ import xmlapi
 class Item:
 	def __init__(self, ref, scope):
 		self.ref = ref
-		self.scope = scope
+		if scope:
+			self.scope = scope
+		else:
+			self.scope = 'public'
 		self.signature = None
 		self.items = []
 
