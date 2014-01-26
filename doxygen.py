@@ -70,6 +70,18 @@ def _parse_compounddef_node(xml):
 			item.signature = '%s %s' % (xml['kind'], child.text())
 		elif child.name == 'sectiondef':
 			_parse_sectiondef_node(child, item)
+		elif child.name in ['innerclass', 'innernamespace']:
+			member = Item(child['refid'], child['prot'])
+			name = child.text().split('::')[-1]
+			if member.ref.startswith('class'):
+				member.signature = 'class %s' % name
+			elif member.ref.startswith('namespace'):
+				member.signature = 'namespace %s' % name
+			elif member.ref.startswith('struct'):
+				member.signature = 'struct %s' % name
+			else:
+				raise Exception('Unknown innerclass/innernamespace referenced kind.')
+			item.add(member)
 	return item
 
 
