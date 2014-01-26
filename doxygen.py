@@ -46,6 +46,14 @@ def create_item(ref, scope):
 	return ret
 
 
+def _parse_enumvalue_node(xml):
+	value = create_item(xml['id'], xml['prot'])
+	for child in xml:
+		if child.name == 'name':
+			value.signature = child.text()
+	return value
+
+
 def _parse_memberdef_node(xml, item):
 	member = create_item(xml['id'], xml['prot'])
 	vartype = None
@@ -58,6 +66,8 @@ def _parse_memberdef_node(xml, item):
 			varname = child.text()
 		elif child.name == 'argsstring':
 			args = child.text()
+		elif child.name == 'enumvalue':
+			member.add(_parse_enumvalue_node(child))
 	if xml['kind'] in ['enum']:
 		member.signature = '%s %s' % (xml['kind'], varname)
 	elif args:
