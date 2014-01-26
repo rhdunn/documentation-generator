@@ -37,8 +37,17 @@ class Item:
 		self.items.append(item)
 
 
+_items = {}
+def create_item(ref, scope):
+	if ref in _items.keys():
+		return _items[ref]
+	ret = Item(ref, scope)
+	_items[ref] = ret
+	return ret
+
+
 def _parse_memberdef_node(xml, item):
-	member = Item(xml['id'], xml['prot'])
+	member = create_item(xml['id'], xml['prot'])
 	vartype = None
 	varname = None
 	args = None
@@ -70,23 +79,24 @@ def _parse_sectiondef_node(xml, item):
 def _parse_compounddef_node(xml):
 	if xml['kind'] in ['file', 'dir', 'page']:
 		return None
-	item = Item(xml['id'], xml['prot'])
+	item = create_item(xml['id'], xml['prot'])
 	for child in xml:
 		if child.name == 'compoundname':
 			item.signature = '%s %s' % (xml['kind'], child.text())
 		elif child.name == 'sectiondef':
 			_parse_sectiondef_node(child, item)
 		elif child.name in ['innerclass', 'innernamespace']:
-			member = Item(child['refid'], child['prot'])
-			name = child.text().split('::')[-1]
-			if member.ref.startswith('class'):
-				member.signature = 'class %s' % name
-			elif member.ref.startswith('namespace'):
-				member.signature = 'namespace %s' % name
-			elif member.ref.startswith('struct'):
-				member.signature = 'struct %s' % name
-			else:
-				raise Exception('Unknown innerclass/innernamespace referenced kind.')
+			member = create_item(child['refid'], child['prot'])
+			if not member.signature:
+				name = child.text().split('::')[-1]
+				if member.ref.startswith('class'):
+					member.signature = 'class %s' % name
+				elif member.ref.startswith('namespace'):
+					member.signature = 'namespace %s' % name
+				elif member.ref.startswith('struct'):
+					member.signature = 'struct %s' % name
+				else:
+					raise Exception('Unknown innerclass/innernamespace referenced kind.')
 			item.add(member)
 	return item
 
