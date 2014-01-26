@@ -36,11 +36,22 @@ class Item:
 
 def _parse_memberdef_node(xml, item):
 	member = Item(xml['id'], xml['prot'])
+	vartype = None
+	varname = None
+	args = None
 	for child in xml:
-		if child.name == 'definition':
-			member.signature = child.text()
+		if child.name == 'type':
+			vartype = child.text()
+		elif child.name == 'name':
+			varname = child.text()
 		elif child.name == 'argsstring':
-			member.signature = '%s%s' % (member.signature, child.text())
+			args = '%s%s' % (member.signature, child.text())
+	if xml['kind'] in ['enum']:
+		member.signature = '%s %s' % (xml['kind'], varname)
+	elif args:
+		member.signature = '%s %s%s' % (vartype, varname, args)
+	else:
+		member.signature = '%s %s' % (vartype, varname)
 	return member
 
 
