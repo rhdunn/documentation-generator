@@ -52,7 +52,10 @@ def _parse_memberdef_node(xml, item):
 	if xml['kind'] in ['enum']:
 		member.signature = '%s %s' % (xml['kind'], varname)
 	elif args:
-		member.signature = '%s %s%s' % (vartype, varname, args)
+		if vartype:
+			member.signature = '%s %s%s' % (vartype, varname, args)
+		else: # constructor/destructor
+			member.signature = '%s%s' % (varname, args)
 	else:
 		member.signature = '%s %s' % (vartype, varname)
 	return member
