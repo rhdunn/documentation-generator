@@ -103,13 +103,26 @@ def parse_doxygen(filename):
 
 
 if __name__ == '__main__':
-	def print_item(item, level=0):
+	def print_item(f, item, level=0):
 		if not item:
 			return
-		print('%s%s [%s|%s]' % (('... '*level), item.signature, item.scope, item.ref))
+		f.write('%s%s [%s|%s]\n' % (('... '*level), item.signature, item.scope, item.ref))
 		for child in item.items:
-			print_item(child, level+1)
+			print_item(f, child, level+1)
 
+	items = []
 	for filename in sys.argv[1:]:
 		item = parse_doxygen(filename)
-		print_item(item)
+		if item:
+			items.append(item)
+
+	rootdir = 'docs/api/html'
+	if not os.path.exists(rootdir):
+		os.mkdir(rootdir)
+
+	for item in items:
+		with open(os.path.join(rootdir, '%s.html' % item.ref), 'w') as f:
+			f.write('<!DOCTYPE html>\n')
+			f.write('<pre>\n')
+			print_item(f, item)
+			f.write('</pre>\n')
