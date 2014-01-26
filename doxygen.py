@@ -72,9 +72,14 @@ def _parse_memberdef_node(xml, item):
 		member.signature = '%s %s' % (xml['kind'], varname)
 	elif args:
 		if vartype:
-			member.signature = '%s %s%s' % (vartype, varname, args)
+			if xml['kind'] in ['typedef']:
+				member.signature = '%s %s %s%s' % (xml['kind'], vartype, varname, args)
+			else:
+				member.signature = '%s %s%s' % (vartype, varname, args)
 		else: # constructor/destructor
 			member.signature = '%s%s' % (varname, args)
+	elif xml['kind'] in ['typedef']:
+		member.signature = '%s %s %s' % (xml['kind'], vartype, varname)
 	else:
 		member.signature = '%s %s' % (vartype, varname)
 	return member
