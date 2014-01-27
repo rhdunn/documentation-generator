@@ -68,7 +68,7 @@ def _parse_memberdef_node(xml, item):
 			args = child['text()']
 		elif child.name == 'enumvalue':
 			member.add(_parse_enumvalue_node(child))
-	if xml['@kind'] in ['@enum']:
+	if xml['@kind'] in ['enum']:
 		member.signature = '%s %s' % (xml['@kind'], varname)
 	elif args:
 		if vartype:
