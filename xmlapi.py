@@ -148,7 +148,11 @@ def tokenizer(selector):
 		yield token, value
 
 
+_selector_cache = {}
 def parse_selector(selector):
+	if selector in _selector_cache.keys():
+		return _selector_cache[selector]
+
 	stack = []
 	for token, value in tokenizer(selector):
 		if token == 'name':
@@ -189,6 +193,8 @@ def parse_selector(selector):
 			raise Exception('XPath: invalid syntax for - %s' % selector)
 		stack = stack[:-3]
 		stack.append(('selector', ChildSelector(c, a)))
+
+	_selector_cache[selector] = stack[0][1]
 	return stack[0][1]
 
 
