@@ -19,8 +19,154 @@
 
 import os
 import sys
+import re
 
 from xml.dom import minidom
+
+
+class NodeSelector:
+	def __init__(self, name):
+		self.typename = 'node'
+		self.name = name
+
+	def __repr__(self):
+		return 'Node(%s)' % self.name
+
+	def select(self, item):
+		for node in item.children():
+			if node.name == self.name:
+				yield node
+
+
+class AttributeSelector:
+	def __init__(self, name):
+		self.typename = 'attribute'
+		self.name = name
+
+	def __repr__(self):
+		return 'Attr(%s)' % self.name
+
+	def select(self, item):
+		if item.node.attributes:
+			ret = item.node.attributes.get(self.name, None)
+			if ret:
+				yield ret.value
+
+
+class EqualsSelector:
+	def __init__(self, selector, value):
+		self.typename = 'equals'
+		self.selector = selector
+		self.value = value
+
+	def __repr__(self):
+		return 'Equals(%s,%s)' % (self.selector, self.value)
+
+	def select(self, item):
+		for value in self.selector.select(item):
+			if value == self.value:
+				yield value
+
+
+class IfSelector:
+	def __init__(self, node, selector):
+		self.typename = 'when'
+		self.node = node
+		self.selector = selector
+
+	def __repr__(self):
+		return '%s.If(%s)' % (self.node, self.selector)
+
+	def select(self, item):
+		for node in self.node.select(item):
+			for value in self.selector.select(node):
+				yield node
+
+
+class ChildSelector:
+	def __init__(self, node, selector):
+		self.typename = 'child'
+		self.node = node
+		self.selector = selector
+
+	def __repr__(self):
+		return '%s.Select(%s)' % (self.node, self.selector)
+
+	def select(self, item):
+		for node in self.node.select(item):
+			for match in self.selector.select(node):
+				yield match
+
+
+_tokens = [
+	(re.compile(r'[a-zA-Z0-9\_]+'), 'name'),
+	(re.compile(r'"[^"]*"'), 'string'),
+	(re.compile(r'\['), '['),
+	(re.compile(r'\]'), ']'),
+	(re.compile(r'@'), '@'),
+	(re.compile(r'='), '='),
+	(re.compile(r'/'), '/'),
+]
+
+
+def match_token(text, pos):
+	for matcher, token in _tokens:
+		m = matcher.match(text, pos)
+		if m:
+			return token, m.group(0), m.end()
+	return None, None, None
+
+
+def tokenizer(selector):
+	pos = 0
+	while pos < len(selector):
+		token, value, end = match_token(selector, pos)
+		if not token:
+			raise Exception('Invalid selector token : %s' % selector[pos:])
+		pos = end
+		yield token, value
+
+
+def parse_selector(selector):
+	stack = []
+	for token, value in tokenizer(selector):
+		if token == 'name':
+			try:
+				top, _ = stack[-1]
+			except IndexError:
+				top = None
+			if top == '@':
+				stack = stack[:-1]
+				stack.append(('selector', AttributeSelector(value)))
+			else:
+				stack.append(('selector', NodeSelector(value)))
+		elif token == 'string':
+			a, _ = stack[-1]
+			_, b = stack[-2]
+			if a == '=' and b.typename == 'attribute':
+				stack = stack[:-2]
+				stack.append(('selector', EqualsSelector(b, value[1:-1])))
+			else:
+				raise Exception('XPath: invalid syntax for - %s' % selector)
+		elif token == ']':
+			_, a = stack[-1]
+			b, _ = stack[-2]
+			_, c = stack[-3]
+			if b != '[':
+				raise Exception('XPath: invalid syntax for - %s' % selector)
+			stack = stack[:-3]
+			stack.append(('selector', IfSelector(c, a)))
+		else:
+			stack.append((token, value))
+	while len(stack) > 1:
+		_, a = stack[-1]
+		b, _ = stack[-2]
+		_, c = stack[-3]
+		if b != '/':
+			raise Exception('XPath: invalid syntax for - %s' % selector)
+		stack = stack[:-3]
+		stack.append(('selector', ChildSelector(c, a)))
+	return stack[0][1]
 
 
 class XmlNode:
@@ -42,6 +188,14 @@ class XmlNode:
 	def children(self):
 		for child in self.node.childNodes:
 			yield XmlNode(child)
+
+	def select(self, xpath):
+		for item in self.selectall(xpath):
+			return item
+		return None
+
+	def selectall(self, xpath):
+		return parse_selector(xpath).select(self)
 
 	def text(self):
 		return ''.join(self._text(self.node))
