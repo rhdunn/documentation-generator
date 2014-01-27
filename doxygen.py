@@ -47,7 +47,7 @@ def create_item(ref, scope):
 
 
 def _parse_enumvalue_node(xml):
-	value = create_item(xml['id'], xml['prot'])
+	value = create_item(xml['@id'], xml['@prot'])
 	for child in xml:
 		if child.name == 'name':
 			value.signature = child.text()
@@ -55,7 +55,7 @@ def _parse_enumvalue_node(xml):
 
 
 def _parse_memberdef_node(xml, item):
-	member = create_item(xml['id'], xml['prot'])
+	member = create_item(xml['@id'], xml['@prot'])
 	vartype = None
 	varname = None
 	args = None
@@ -68,18 +68,18 @@ def _parse_memberdef_node(xml, item):
 			args = child.text()
 		elif child.name == 'enumvalue':
 			member.add(_parse_enumvalue_node(child))
-	if xml['kind'] in ['enum']:
-		member.signature = '%s %s' % (xml['kind'], varname)
+	if xml['@kind'] in ['@enum']:
+		member.signature = '%s %s' % (xml['@kind'], varname)
 	elif args:
 		if vartype:
-			if xml['kind'] in ['typedef']:
-				member.signature = '%s %s %s%s' % (xml['kind'], vartype, varname, args)
+			if xml['@kind'] in ['@typedef']:
+				member.signature = '%s %s %s%s' % (xml['@kind'], vartype, varname, args)
 			else:
 				member.signature = '%s %s%s' % (vartype, varname, args)
 		else: # constructor/destructor
 			member.signature = '%s%s' % (varname, args)
-	elif xml['kind'] in ['typedef']:
-		member.signature = '%s %s %s' % (xml['kind'], vartype, varname)
+	elif xml['@kind'] in ['typedef']:
+		member.signature = '%s %s %s' % (xml['@kind'], vartype, varname)
 	else:
 		member.signature = '%s %s' % (vartype, varname)
 	return member
@@ -92,16 +92,16 @@ def _parse_sectiondef_node(xml, item):
 
 
 def _parse_compounddef_node(xml):
-	if xml['kind'] in ['file', 'dir', 'page']:
+	if xml['@kind'] in ['file', 'dir', 'page']:
 		return None
-	item = create_item(xml['id'], xml['prot'])
+	item = create_item(xml['@id'], xml['@prot'])
 	for child in xml:
 		if child.name == 'compoundname':
-			item.signature = '%s %s' % (xml['kind'], child.text())
+			item.signature = '%s %s' % (xml['@kind'], child.text())
 		elif child.name == 'sectiondef':
 			_parse_sectiondef_node(child, item)
 		elif child.name in ['innerclass', 'innernamespace']:
-			member = create_item(child['refid'], child['prot'])
+			member = create_item(child['@refid'], child['@prot'])
 			if not member.signature:
 				name = child.text().split('::')[-1]
 				if member.ref.startswith('class'):

@@ -179,22 +179,16 @@ class XmlNode:
 			if child.nodeType == child.ELEMENT_NODE:
 				yield XmlNode(child)
 
-	def __getitem__(self, name):
-		ret = self.node.getAttribute(name)
-		if ret == '':
-			return None
-		return ret
+	def __getitem__(self, xpath):
+		for item in self.select(xpath):
+			return item
+		return None
 
 	def children(self):
 		for child in self.node.childNodes:
 			yield XmlNode(child)
 
 	def select(self, xpath):
-		for item in self.selectall(xpath):
-			return item
-		return None
-
-	def selectall(self, xpath):
 		return parse_selector(xpath).select(self)
 
 	def text(self):
