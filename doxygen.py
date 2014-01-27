@@ -50,7 +50,7 @@ def _parse_enumvalue_node(xml):
 	value = create_item(xml['@id'], xml['@prot'])
 	for child in xml:
 		if child.name == 'name':
-			value.signature = child.text()
+			value.signature = child['text()']
 	return value
 
 
@@ -61,11 +61,11 @@ def _parse_memberdef_node(xml, item):
 	args = None
 	for child in xml:
 		if child.name == 'type':
-			vartype = child.text()
+			vartype = child['text()']
 		elif child.name == 'name':
-			varname = child.text()
+			varname = child['text()']
 		elif child.name == 'argsstring':
-			args = child.text()
+			args = child['text()']
 		elif child.name == 'enumvalue':
 			member.add(_parse_enumvalue_node(child))
 	if xml['@kind'] in ['@enum']:
@@ -97,13 +97,13 @@ def _parse_compounddef_node(xml):
 	item = create_item(xml['@id'], xml['@prot'])
 	for child in xml:
 		if child.name == 'compoundname':
-			item.signature = '%s %s' % (xml['@kind'], child.text())
+			item.signature = '%s %s' % (xml['@kind'], child['text()'])
 		elif child.name == 'sectiondef':
 			_parse_sectiondef_node(child, item)
 		elif child.name in ['innerclass', 'innernamespace']:
 			member = create_item(child['@refid'], child['@prot'])
 			if not member.signature:
-				name = child.text().split('::')[-1]
+				name = child['text()'].split('::')[-1]
 				if member.ref.startswith('class'):
 					member.signature = 'class %s' % name
 				elif member.ref.startswith('namespace'):

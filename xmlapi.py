@@ -53,6 +53,26 @@ class AttributeSelector:
 				yield ret.value
 
 
+class TextSelector:
+	def __init__(self):
+		self.typename = 'text()'
+
+	def __repr__(self):
+		return 'text()'
+
+	def select(self, item):
+		yield ''.join(self._text(item.node))
+
+	def _text(self, node):
+		ret = []
+		for child in node.childNodes:
+			if child.nodeType == child.TEXT_NODE:
+				ret.append(child.nodeValue)
+			elif child.nodeType == child.ELEMENT_NODE:
+				ret.extend(self._text(child))
+		return ret
+
+
 class EqualsSelector:
 	def __init__(self, selector, value):
 		self.typename = 'equals'
@@ -99,6 +119,7 @@ class ChildSelector:
 
 
 _tokens = [
+	(re.compile(r'text\(\)'), 'text()'),
 	(re.compile(r'[a-zA-Z0-9\_]+'), 'name'),
 	(re.compile(r'"[^"]*"'), 'string'),
 	(re.compile(r'\['), '['),
@@ -156,6 +177,8 @@ def parse_selector(selector):
 				raise Exception('XPath: invalid syntax for - %s' % selector)
 			stack = stack[:-3]
 			stack.append(('selector', IfSelector(c, a)))
+		elif token == 'text()':
+			stack.append(('selector', TextSelector()))
 		else:
 			stack.append((token, value))
 	while len(stack) > 1:
@@ -190,18 +213,6 @@ class XmlNode:
 
 	def select(self, xpath):
 		return parse_selector(xpath).select(self)
-
-	def text(self):
-		return ''.join(self._text(self.node))
-
-	def _text(self, node):
-		ret = []
-		for child in node.childNodes:
-			if child.nodeType == child.TEXT_NODE:
-				ret.append(child.nodeValue)
-			elif child.nodeType == child.ELEMENT_NODE:
-				ret.extend(self._text(child))
-		return ret
 
 
 class XmlDocument(XmlNode):
