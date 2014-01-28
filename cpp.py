@@ -35,8 +35,38 @@ class WhiteSpace(Token):
 		Token.__init__(self, value)
 
 
+class Literal(Token):
+	def __init__(self, value):
+		Token.__init__(self, value)
+
+
+class IntegerLiteral(Literal):
+	def __init__(self, value):
+		Literal.__init__(self, value)
+
+
+class OctalLiteral(IntegerLiteral):
+	def __init__(self, value):
+		IntegerLiteral.__init__(self, value)
+
+
+class DecimalLiteral(IntegerLiteral):
+	def __init__(self, value):
+		IntegerLiteral.__init__(self, value)
+
+
+class HexadecimalLiteral(IntegerLiteral):
+	def __init__(self, value):
+		IntegerLiteral.__init__(self, value)
+
+
+_integer_suffix = '([uU](ll|LL|l|L)?|(ll|LL|l|L)[uU]?)' # 2.13.1 [lex.icon]
 _tokens = [
-	(re.compile(r'\s+'), WhiteSpace),
+	(re.compile('\\s+'), WhiteSpace),
+	# 2.13.1 [lex.icon]
+	(re.compile('0x[0-9a-fA-F]+%s?' % _integer_suffix), HexadecimalLiteral),
+	(re.compile('0[0-7]*%s?'        % _integer_suffix), OctalLiteral),
+	(re.compile('[0-9]+%s?'         % _integer_suffix), DecimalLiteral),
 ]
 
 
@@ -59,20 +89,31 @@ def tokenizer(text):
 
 
 if __name__ == '__main__':
-	tokenizer_testcases = [
-		# whitespace ############################################
-		(' ', [WhiteSpace(' ')]),
-		('\t', [WhiteSpace('\t')]),
-		('\r', [WhiteSpace('\r')]),
-		('\n', [WhiteSpace('\n')]),
-		('    ', [WhiteSpace('    ')]),
-		(' \t\r\n', [WhiteSpace(' \t\r\n')]),
+	integer_suffix = ['',
+		'u',  'ul',  'uL',  'ull', 'uLL', 'U', 'Ul', 'UL', 'Ull', 'ULL',
+		'l',  'lu',  'lU',  'L',   'Lu',  'LU',
+		'll', 'llu', 'llU', 'LL',  'LLu', 'LLU',
 	]
+	tokenizer_testcases = []
+	for whitespace in [' ', '\t', '\r', '\n', '    ', ' \t\r\n']:
+		tokenizer_testcases.append((whitespace, [WhiteSpace(whitespace)]))
+	for value in ['0', '01234567']: # 2.13.1 [lex.icon] -- octal-literal
+		for suffix in integer_suffix:
+			tokenizer_testcases.append((value + suffix, [OctalLiteral(value + suffix)]))
+	for value in ['1', '23']: # 2.13.1 [lex.icon] -- decimal-literal
+		for suffix in integer_suffix:
+			tokenizer_testcases.append((value + suffix, [DecimalLiteral(value + suffix)]))
+	for value in ['0x123abc', '0xABC123']: # 2.13.1 [lex.icon] -- hexadecimal-literal
+		for suffix in integer_suffix:
+			tokenizer_testcases.append((value + suffix, [HexadecimalLiteral(value + suffix)]))
 
 	passed = 0
 	failed = 0
 	for text, result in tokenizer_testcases:
-		got = repr(list(tokenizer(text)))
+		try:
+			got = repr(list(tokenizer(text)))
+		except:
+			got = None
 		expected = repr(result)
 		if expected == got:
 			passed = passed + 1
