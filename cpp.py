@@ -150,6 +150,8 @@ _tokens = [
 	(re.compile('L?"[^"]*"'), Literal, 'string'), # 2.13.4 [lex.string]
 	(re.compile('(%s)\\b' % '|'.join(_keywords)), Keyword, None), # 2.11 [lex.key]
 	(re.compile('[a-zA-Z_][a-zA-Z0-9_]*'), Identifier, None), # 2.10 [lex.name]
+	(re.compile('[0-9]+\\.([0-9]+)?(e[\\+-]?[0-9]+)?[fFlL]?'), Literal, 'float'), # 2.13.3 [lex.fcon]
+	(re.compile('[0-9]+e[\\+-]?[0-9]+[fFlL]?'), Literal, 'float'), # 2.13.3 [lex.fcon]
 	(re.compile('0x[0-9a-fA-F]+%s?' % _integer_suffix), Literal, 'hexadecimal'), # 2.13.1 [lex.icon]
 	(re.compile('0[0-7]*%s?'        % _integer_suffix), Literal, 'octal'), # 2.13.1 [lex.icon]
 	(re.compile('[0-9]+%s?'         % _integer_suffix), Literal, 'decimal'), # 2.13.1 [lex.icon]
@@ -257,6 +259,17 @@ if __name__ == '__main__':
 	characters = ["'a'", "'\\0'", "L'a'", "L'\\0'"]
 	for c in characters:
 		tokenizer_testcases.append((c, [Literal(c, 'character')]))
+	# 2.13.3 [lex.fcon]
+	float_suffix = ['', 'f', 'F', 'l', 'L']
+	fcon = [
+		'1.2',     '12.23',     '2.',
+		'1.2e99',  '12.23e47',  '2.e33',  '6e5',
+		'1.2e+99', '12.23e+47', '2.e+33', '6e+5',
+		'1.2e-99', '12.23e-47', '2.e-33', '6e-5',
+	]
+	for f in fcon:
+		for suffix in float_suffix:
+			tokenizer_testcases.append((f + suffix, [Literal(f + suffix, 'float')]))
 	# 2.13.4 [lex.string]
 	strings = ['""', '"abc"', 'L""', 'L"abc"']
 	for s in strings:
