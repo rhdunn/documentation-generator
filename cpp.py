@@ -23,56 +23,39 @@ import re
 
 
 class Token:
-	def __init__(self, value):
+	def __init__(self, value, kind):
 		self.value = value
+		self.kind  = kind
 
 	def __repr__(self):
+		if self.kind:
+			return '%s(%s|%s)' % (self.__class__.__name__, repr(self.value), self.kind)
 		return '%s(%s)' % (self.__class__.__name__, repr(self.value))
 
 
 class WhiteSpace(Token):
-	def __init__(self, value):
-		Token.__init__(self, value)
+	def __init__(self, value, kind):
+		Token.__init__(self, value, kind)
 
 
 class Identifier(Token):
-	def __init__(self, value):
-		Token.__init__(self, value)
+	def __init__(self, value, kind):
+		Token.__init__(self, value, kind)
 
 
 class Keyword(Token):
-	def __init__(self, value):
-		Token.__init__(self, value)
+	def __init__(self, value, kind):
+		Token.__init__(self, value, kind)
 
 
 class Operator(Token):
-	def __init__(self, value):
-		Token.__init__(self, value)
+	def __init__(self, value, kind):
+		Token.__init__(self, value, kind)
 
 
 class Literal(Token):
-	def __init__(self, value):
-		Token.__init__(self, value)
-
-
-class IntegerLiteral(Literal):
-	def __init__(self, value):
-		Literal.__init__(self, value)
-
-
-class OctalLiteral(IntegerLiteral):
-	def __init__(self, value):
-		IntegerLiteral.__init__(self, value)
-
-
-class DecimalLiteral(IntegerLiteral):
-	def __init__(self, value):
-		IntegerLiteral.__init__(self, value)
-
-
-class HexadecimalLiteral(IntegerLiteral):
-	def __init__(self, value):
-		IntegerLiteral.__init__(self, value)
+	def __init__(self, value, kind):
+		Token.__init__(self, value, kind)
 
 
 _keywords = [ # 2.11 [lex.key]
@@ -162,48 +145,48 @@ _keywords = [ # 2.11 [lex.key]
 ]
 _integer_suffix = '([uU](ll|LL|l|L)?|(ll|LL|l|L)[uU]?)' # 2.13.1 [lex.icon]
 _tokens = [
-	(re.compile('\\s+'), WhiteSpace),
-	(re.compile('(%s)\\b' % '|'.join(_keywords)), Keyword), # 2.11 [lex.key]
-	(re.compile('[a-zA-Z_][a-zA-Z0-9_]*'), Identifier), # 2.10 [lex.name]
-	(re.compile('0x[0-9a-fA-F]+%s?' % _integer_suffix), HexadecimalLiteral), # 2.13.1 [lex.icon]
-	(re.compile('0[0-7]*%s?'        % _integer_suffix), OctalLiteral), # 2.13.1 [lex.icon]
-	(re.compile('[0-9]+%s?'         % _integer_suffix), DecimalLiteral), # 2.13.1 [lex.icon]
-	(re.compile('\?\?[=/\'\(\)!<>\-]'), Operator), # 2.3 [lex.trigraph]
+	(re.compile('\\s+'), WhiteSpace, None),
+	(re.compile('(%s)\\b' % '|'.join(_keywords)), Keyword, None), # 2.11 [lex.key]
+	(re.compile('[a-zA-Z_][a-zA-Z0-9_]*'), Identifier, None), # 2.10 [lex.name]
+	(re.compile('0x[0-9a-fA-F]+%s?' % _integer_suffix), Literal, 'hexadecimal'), # 2.13.1 [lex.icon]
+	(re.compile('0[0-7]*%s?'        % _integer_suffix), Literal, 'octal'), # 2.13.1 [lex.icon]
+	(re.compile('[0-9]+%s?'         % _integer_suffix), Literal, 'decimal'), # 2.13.1 [lex.icon]
+	(re.compile('\?\?[=/\'\(\)!<>\-]'), Operator, None), # 2.3 [lex.trigraph]
 	# 2.12 [lex.operators]
-	(re.compile('{|}'), Operator),
-	(re.compile('\\[|\\]'), Operator),
-	(re.compile('\\(|\\)'), Operator),
-	(re.compile('<%|%>'), Operator),
-	(re.compile('<:|:>'), Operator),
-	(re.compile('<<=|<=|<<|<'), Operator),
-	(re.compile('>>=|>=|>>|>'), Operator),
-	(re.compile('##|#'), Operator),
-	(re.compile('%:%:|%:'), Operator),
-	(re.compile('::|:'), Operator),
-	(re.compile('->\\*|->'), Operator),
-	(re.compile('\\+=|\\+\\+|\\+'), Operator),
-	(re.compile('-=|--|-'), Operator),
-	(re.compile('\\.\\.\\.|\\.\\*|\\.'), Operator),
-	(re.compile(';'), Operator),
-	(re.compile('\\?'), Operator),
-	(re.compile('\\*=|\\*'), Operator),
-	(re.compile('/=|/'), Operator),
-	(re.compile('%=|%'), Operator),
-	(re.compile('\\^=|\\^'), Operator),
-	(re.compile('&=|&&|&'), Operator),
-	(re.compile('\\|=|\\|\\||\\|'), Operator),
-	(re.compile('~'), Operator),
-	(re.compile('!=|!'), Operator),
-	(re.compile(','), Operator),
-	(re.compile('==|='), Operator),
+	(re.compile('{|}'), Operator, None),
+	(re.compile('\\[|\\]'), Operator, None),
+	(re.compile('\\(|\\)'), Operator, None),
+	(re.compile('<%|%>'), Operator, None),
+	(re.compile('<:|:>'), Operator, None),
+	(re.compile('<<=|<=|<<|<'), Operator, None),
+	(re.compile('>>=|>=|>>|>'), Operator, None),
+	(re.compile('##|#'), Operator, None),
+	(re.compile('%:%:|%:'), Operator, None),
+	(re.compile('::|:'), Operator, None),
+	(re.compile('->\\*|->'), Operator, None),
+	(re.compile('\\+=|\\+\\+|\\+'), Operator, None),
+	(re.compile('-=|--|-'), Operator, None),
+	(re.compile('\\.\\.\\.|\\.\\*|\\.'), Operator, None),
+	(re.compile(';'), Operator, None),
+	(re.compile('\\?'), Operator, None),
+	(re.compile('\\*=|\\*'), Operator, None),
+	(re.compile('/=|/'), Operator, None),
+	(re.compile('%=|%'), Operator, None),
+	(re.compile('\\^=|\\^'), Operator, None),
+	(re.compile('&=|&&|&'), Operator, None),
+	(re.compile('\\|=|\\|\\||\\|'), Operator, None),
+	(re.compile('~'), Operator, None),
+	(re.compile('!=|!'), Operator, None),
+	(re.compile(','), Operator, None),
+	(re.compile('==|='), Operator, None),
 ]
 
 
 def match_token(text, pos):
-	for matcher, token in _tokens:
+	for matcher, token, kind in _tokens:
 		m = matcher.match(text, pos)
 		if m:
-			return token(m.group(0)), m.end()
+			return token(m.group(0), kind), m.end()
 	return None, None
 
 
@@ -217,10 +200,14 @@ def tokenizer(text):
 		yield token
 
 
+def parse(text):
+	return list(tokenizer(text))
+
+
 if __name__ == '__main__':
 	tokenizer_testcases = []
 	for whitespace in [' ', '\t', '\r', '\n', '    ', ' \t\r\n']:
-		tokenizer_testcases.append((whitespace, [WhiteSpace(whitespace)]))
+		tokenizer_testcases.append((whitespace, [WhiteSpace(whitespace, None)]))
 	# 2.10 [lex.name]
 	identifiers = [
 		'lowercase', 'UPPERCASE', 'MixedCase',
@@ -229,10 +216,10 @@ if __name__ == '__main__':
 		'a', 'A', '_',
 	]
 	for ident in identifiers:
-		tokenizer_testcases.append((ident, [Identifier(ident)]))
+		tokenizer_testcases.append((ident, [Identifier(ident, None)]))
 	# 2.11 [lex.key]
 	for keyword in _keywords:
-		tokenizer_testcases.append((keyword, [Keyword(keyword)]))
+		tokenizer_testcases.append((keyword, [Keyword(keyword, None)]))
 	# operators and punctuators
 	operators = [
 		# 2.3 [lex.trigraph]
@@ -248,7 +235,7 @@ if __name__ == '__main__':
 		'<=', '>=', '&&', '||', '++', '--',  ',',   '->*', '->',
 	]
 	for op in operators:
-		tokenizer_testcases.append((op, [Operator(op)]))
+		tokenizer_testcases.append((op, [Operator(op, None)]))
 	# 2.13.1 [lex.icon]
 	integer_suffix = ['',
 		'u',  'ul',  'uL',  'ull', 'uLL', 'U', 'Ul', 'UL', 'Ull', 'ULL',
@@ -257,13 +244,13 @@ if __name__ == '__main__':
 	]
 	for value in ['0', '01234567']:
 		for suffix in integer_suffix:
-			tokenizer_testcases.append((value + suffix, [OctalLiteral(value + suffix)]))
+			tokenizer_testcases.append((value + suffix, [Literal(value + suffix, 'octal')]))
 	for value in ['1', '23']:
 		for suffix in integer_suffix:
-			tokenizer_testcases.append((value + suffix, [DecimalLiteral(value + suffix)]))
+			tokenizer_testcases.append((value + suffix, [Literal(value + suffix, 'decimal')]))
 	for value in ['0x1', '0x123abc', '0xABC123']:
 		for suffix in integer_suffix:
-			tokenizer_testcases.append((value + suffix, [HexadecimalLiteral(value + suffix)]))
+			tokenizer_testcases.append((value + suffix, [Literal(value + suffix, 'hexadecimal')]))
 
 	passed = 0
 	failed = 0
