@@ -35,6 +35,11 @@ class WhiteSpace(Token):
 		Token.__init__(self, value)
 
 
+class Identifier(Token):
+	def __init__(self, value):
+		Token.__init__(self, value)
+
+
 class Literal(Token):
 	def __init__(self, value):
 		Token.__init__(self, value)
@@ -63,10 +68,10 @@ class HexadecimalLiteral(IntegerLiteral):
 _integer_suffix = '([uU](ll|LL|l|L)?|(ll|LL|l|L)[uU]?)' # 2.13.1 [lex.icon]
 _tokens = [
 	(re.compile('\\s+'), WhiteSpace),
-	# 2.13.1 [lex.icon]
-	(re.compile('0x[0-9a-fA-F]+%s?' % _integer_suffix), HexadecimalLiteral),
-	(re.compile('0[0-7]*%s?'        % _integer_suffix), OctalLiteral),
-	(re.compile('[0-9]+%s?'         % _integer_suffix), DecimalLiteral),
+	(re.compile('[a-zA-Z_][a-zA-Z0-9_]*'), Identifier), # 2.10 [lex.name]
+	(re.compile('0x[0-9a-fA-F]+%s?' % _integer_suffix), HexadecimalLiteral), # 2.13.1 [lex.icon]
+	(re.compile('0[0-7]*%s?'        % _integer_suffix), OctalLiteral), # 2.13.1 [lex.icon]
+	(re.compile('[0-9]+%s?'         % _integer_suffix), DecimalLiteral), # 2.13.1 [lex.icon]
 ]
 
 
@@ -89,21 +94,31 @@ def tokenizer(text):
 
 
 if __name__ == '__main__':
+	tokenizer_testcases = []
+	for whitespace in [' ', '\t', '\r', '\n', '    ', ' \t\r\n']:
+		tokenizer_testcases.append((whitespace, [WhiteSpace(whitespace)]))
+	# 2.10 [lex.name]
+	identifiers = [
+		'lowercase', 'UPPERCASE', 'MixedCase',
+		'_abc', 'ab_cd', '__T',
+		'_123', 'a123', 'A123',
+		'a', 'A', '_',
+	]
+	for ident in identifiers:
+		tokenizer_testcases.append((ident, [Identifier(ident)]))
+	# 2.13.1 [lex.icon]
 	integer_suffix = ['',
 		'u',  'ul',  'uL',  'ull', 'uLL', 'U', 'Ul', 'UL', 'Ull', 'ULL',
 		'l',  'lu',  'lU',  'L',   'Lu',  'LU',
 		'll', 'llu', 'llU', 'LL',  'LLu', 'LLU',
 	]
-	tokenizer_testcases = []
-	for whitespace in [' ', '\t', '\r', '\n', '    ', ' \t\r\n']:
-		tokenizer_testcases.append((whitespace, [WhiteSpace(whitespace)]))
-	for value in ['0', '01234567']: # 2.13.1 [lex.icon] -- octal-literal
+	for value in ['0', '01234567']:
 		for suffix in integer_suffix:
 			tokenizer_testcases.append((value + suffix, [OctalLiteral(value + suffix)]))
-	for value in ['1', '23']: # 2.13.1 [lex.icon] -- decimal-literal
+	for value in ['1', '23']:
 		for suffix in integer_suffix:
 			tokenizer_testcases.append((value + suffix, [DecimalLiteral(value + suffix)]))
-	for value in ['0x123abc', '0xABC123']: # 2.13.1 [lex.icon] -- hexadecimal-literal
+	for value in ['0x1', '0x123abc', '0xABC123']:
 		for suffix in integer_suffix:
 			tokenizer_testcases.append((value + suffix, [HexadecimalLiteral(value + suffix)]))
 
