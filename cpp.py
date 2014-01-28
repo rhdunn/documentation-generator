@@ -168,6 +168,7 @@ _tokens = [
 	(re.compile('0x[0-9a-fA-F]+%s?' % _integer_suffix), HexadecimalLiteral), # 2.13.1 [lex.icon]
 	(re.compile('0[0-7]*%s?'        % _integer_suffix), OctalLiteral), # 2.13.1 [lex.icon]
 	(re.compile('[0-9]+%s?'         % _integer_suffix), DecimalLiteral), # 2.13.1 [lex.icon]
+	(re.compile('\?\?[=/\'\(\)!<>\-]'), Operator), # 2.3 [lex.trigraph]
 	# 2.12 [lex.operators]
 	(re.compile('{|}'), Operator),
 	(re.compile('\\[|\\]'), Operator),
@@ -232,11 +233,15 @@ if __name__ == '__main__':
 	# 2.11 [lex.key]
 	for keyword in _keywords:
 		tokenizer_testcases.append((keyword, [Keyword(keyword)]))
-	# 2.12 [lex.operators]
+	# operators and punctuators
 	operators = [
-		'{',  '}',  '[',  ']',  '#',  '##',   '(', ')',
-		'<:', ':>', '<%', '%>', '%:', '%:%:', ';', ':', '...',
-		'?',  '::', '.',  '.*',
+		# 2.3 [lex.trigraph]
+		'??=', '??/', '??\'', '??(', '??)', '??!', '??<', '??>', '??-',
+		# 2.12 [lex.operators] -- alternative tokens
+		'<:', ':>', '<%', '%>', '%:', '%:%:',
+		# 2.12 [lex.operators]
+		'{',  '}',  '[',  ']',  '#',  '##', '(', ')', '...',
+		';',  ':',  '?',  '::', '.',  '.*',
 		'+',  '-',  '*',  '/',  '%',  '^',   '&',   '|',   '~',
 		'!',  '=',  '<',  '>',  '+=', '-=',  '*=',  '/=',  '%=',
 		'^=', '&=', '|=', '<<', '>>', '>>=', '<<=', '==',  '!=',
