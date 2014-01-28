@@ -45,6 +45,11 @@ class Keyword(Token):
 		Token.__init__(self, value)
 
 
+class Operator(Token):
+	def __init__(self, value):
+		Token.__init__(self, value)
+
+
 class Literal(Token):
 	def __init__(self, value):
 		Token.__init__(self, value)
@@ -70,15 +75,15 @@ class HexadecimalLiteral(IntegerLiteral):
 		IntegerLiteral.__init__(self, value)
 
 
-_keywords = [
+_keywords = [ # 2.11 [lex.key]
 	'alignas',		# C++11
 	'alignof',		# C++11
-	'and',
-	'and_eq',
+	'and',			# operator
+	'and_eq',		# operator
 	'asm',
 	'auto',
-	'bitand',
-	'bitor',
+	'bitand',		# operator
+	'bitor',		# operator
 	'bool',
 	'break',
 	'case',
@@ -87,14 +92,14 @@ _keywords = [
 	'char16_t',		# C++11
 	'char32_t',		# C++11
 	'class',
-	'compl',
+	'compl',		# operator
 	'const',
 	'constexpr',		# C++11
 	'const_cast',
 	'continue',
 	'decltype',		# C++11
 	'default',
-	'delete',
+	'delete',		# operator
 	'do',
 	'double',
 	'dynamic_cast',
@@ -114,14 +119,14 @@ _keywords = [
 	'long',
 	'mutable',
 	'namespace',
-	'new',
+	'new',			# operator
 	'noexcept',		# C++11
-	'not',
-	'not_eq',
+	'not',			# operator
+	'not_eq',		# operator
 	'nullptr',		# C++11
 	'operator',
-	'or',
-	'or_eq',
+	'or',			# operator
+	'or_eq',		# operator
 	'private',
 	'protected',
 	'public',
@@ -152,17 +157,44 @@ _keywords = [
 	'volatile',
 	'wchar_t',
 	'while',
-	'xor',
-	'xor_eq',
+	'xor',			# operator
+	'xor_eq',		# operator
 ]
 _integer_suffix = '([uU](ll|LL|l|L)?|(ll|LL|l|L)[uU]?)' # 2.13.1 [lex.icon]
 _tokens = [
 	(re.compile('\\s+'), WhiteSpace),
-	(re.compile(r'(%s)\b' % '|'.join(_keywords)), Keyword), # 2.11 [lex.key]
+	(re.compile('(%s)\\b' % '|'.join(_keywords)), Keyword), # 2.11 [lex.key]
 	(re.compile('[a-zA-Z_][a-zA-Z0-9_]*'), Identifier), # 2.10 [lex.name]
 	(re.compile('0x[0-9a-fA-F]+%s?' % _integer_suffix), HexadecimalLiteral), # 2.13.1 [lex.icon]
 	(re.compile('0[0-7]*%s?'        % _integer_suffix), OctalLiteral), # 2.13.1 [lex.icon]
 	(re.compile('[0-9]+%s?'         % _integer_suffix), DecimalLiteral), # 2.13.1 [lex.icon]
+	# 2.12 [lex.operators]
+	(re.compile('{|}'), Operator),
+	(re.compile('\\[|\\]'), Operator),
+	(re.compile('\\(|\\)'), Operator),
+	(re.compile('<%|%>'), Operator),
+	(re.compile('<:|:>'), Operator),
+	(re.compile('<<=|<=|<<|<'), Operator),
+	(re.compile('>>=|>=|>>|>'), Operator),
+	(re.compile('##|#'), Operator),
+	(re.compile('%:%:|%:'), Operator),
+	(re.compile('::|:'), Operator),
+	(re.compile('->\\*|->'), Operator),
+	(re.compile('\\+=|\\+\\+|\\+'), Operator),
+	(re.compile('-=|--|-'), Operator),
+	(re.compile('\\.\\.\\.|\\.\\*|\\.'), Operator),
+	(re.compile(';'), Operator),
+	(re.compile('\\?'), Operator),
+	(re.compile('\\*=|\\*'), Operator),
+	(re.compile('/=|/'), Operator),
+	(re.compile('%=|%'), Operator),
+	(re.compile('\\^=|\\^'), Operator),
+	(re.compile('&=|&&|&'), Operator),
+	(re.compile('\\|=|\\|\\||\\|'), Operator),
+	(re.compile('~'), Operator),
+	(re.compile('!=|!'), Operator),
+	(re.compile(','), Operator),
+	(re.compile('==|='), Operator),
 ]
 
 
@@ -200,6 +232,18 @@ if __name__ == '__main__':
 	# 2.11 [lex.key]
 	for keyword in _keywords:
 		tokenizer_testcases.append((keyword, [Keyword(keyword)]))
+	# 2.12 [lex.operators]
+	operators = [
+		'{',  '}',  '[',  ']',  '#',  '##',   '(', ')',
+		'<:', ':>', '<%', '%>', '%:', '%:%:', ';', ':', '...',
+		'?',  '::', '.',  '.*',
+		'+',  '-',  '*',  '/',  '%',  '^',   '&',   '|',   '~',
+		'!',  '=',  '<',  '>',  '+=', '-=',  '*=',  '/=',  '%=',
+		'^=', '&=', '|=', '<<', '>>', '>>=', '<<=', '==',  '!=',
+		'<=', '>=', '&&', '||', '++', '--',  ',',   '->*', '->',
+	]
+	for op in operators:
+		tokenizer_testcases.append((op, [Operator(op)]))
 	# 2.13.1 [lex.icon]
 	integer_suffix = ['',
 		'u',  'ul',  'uL',  'ull', 'uLL', 'U', 'Ul', 'UL', 'Ull', 'ULL',
