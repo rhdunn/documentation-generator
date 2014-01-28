@@ -21,6 +21,7 @@ import os
 import sys
 
 import xmlapi
+import cpp
 
 
 class Item:
@@ -50,7 +51,7 @@ def _parse_enumvalue_node(xml):
 	value = create_item(xml['@id'], xml['@prot'])
 	for child in xml:
 		if child.name == 'name':
-			value.signature = child['text()']
+			value.signature = cpp.parse(child['text()'])
 	return value
 
 
@@ -69,19 +70,19 @@ def _parse_memberdef_node(xml, item):
 		elif child.name == 'enumvalue':
 			member.add(_parse_enumvalue_node(child))
 	if xml['@kind'] in ['enum']:
-		member.signature = '%s %s' % (xml['@kind'], varname)
+		member.signature = cpp.parse('%s %s' % (xml['@kind'], varname))
 	elif args:
 		if vartype:
 			if xml['@kind'] in ['@typedef']:
-				member.signature = '%s %s %s%s' % (xml['@kind'], vartype, varname, args)
+				member.signature = cpp.parse('%s %s %s%s' % (xml['@kind'], vartype, varname, args))
 			else:
-				member.signature = '%s %s%s' % (vartype, varname, args)
+				member.signature = cpp.parse('%s %s%s' % (vartype, varname, args))
 		else: # constructor/destructor
-			member.signature = '%s%s' % (varname, args)
+			member.signature = cpp.parse('%s%s' % (varname, args))
 	elif xml['@kind'] in ['typedef']:
-		member.signature = '%s %s %s' % (xml['@kind'], vartype, varname)
+		member.signature = cpp.parse('%s %s %s' % (xml['@kind'], vartype, varname))
 	else:
-		member.signature = '%s %s' % (vartype, varname)
+		member.signature = cpp.parse('%s %s' % (vartype, varname))
 	return member
 
 
@@ -97,7 +98,7 @@ def _parse_compounddef_node(xml):
 	item = create_item(xml['@id'], xml['@prot'])
 	for child in xml:
 		if child.name == 'compoundname':
-			item.signature = '%s %s' % (xml['@kind'], child['text()'])
+			item.signature = cpp.parse('%s %s' % (xml['@kind'], child['text()']))
 		elif child.name == 'sectiondef':
 			_parse_sectiondef_node(child, item)
 		elif child.name in ['innerclass', 'innernamespace']:
@@ -105,11 +106,11 @@ def _parse_compounddef_node(xml):
 			if not member.signature:
 				name = child['text()'].split('::')[-1]
 				if member.ref.startswith('class'):
-					member.signature = 'class %s' % name
+					member.signature = cpp.parse('class %s' % name)
 				elif member.ref.startswith('namespace'):
-					member.signature = 'namespace %s' % name
+					member.signature = cpp.parse('namespace %s' % name)
 				elif member.ref.startswith('struct'):
-					member.signature = 'struct %s' % name
+					member.signature = cpp.parse('struct %s' % name)
 				else:
 					raise Exception('Unknown innerclass/innernamespace referenced kind.')
 			item.add(member)
@@ -128,10 +129,26 @@ def parse_doxygen(filename):
 
 
 if __name__ == '__main__':
+	def generate_html_cpp_tokens(f, tokens):
+		for token in tokens:
+			name = token.__class__.__name__
+			if name == 'WhiteSpace':
+				f.write(token.value)
+			elif name == 'Identifier':
+				f.write('<span class="identifier">%s</span>' % token.value)
+			elif name == 'Keyword':
+				f.write('<span class="keyword">%s</span>' % token.value)
+			elif name == 'Operator':
+				f.write('<span class="operator">%s</span>' % token.value)
+			elif name == 'Literal':
+				f.write('<span class="literal">%s</span>' % token.value)
+
 	def generate_html(f, item):
 		if not item or item.scope != 'public':
 			return
-		f.write('<div><code>%s</code></div>\n' % item.signature)
+		f.write('<div><code>')
+		generate_html_cpp_tokens(f, item.signature)
+		f.write('</code></div>\n')
 		f.write('<blockquote>\n')
 		for child in item.items:
 			generate_html(f, child)
@@ -152,5 +169,9 @@ if __name__ == '__main__':
 			f.write('<!DOCTYPE html>\n')
 			f.write('<style type="text/css">\n')
 			f.write('    blockquote { margin-top: 0; margin-bottom: 0; }\n')
+			f.write('    .identifier { font-weight: normal; color: maroon; }\n')
+			f.write('    .keyword    { font-weight: bold;   color: green; }\n')
+			f.write('    .operator   { font-weight: normal; color: black; }\n')
+			f.write('    .literal    { font-weight: normal; color: magenta; }\n')
 			f.write('</style>\n')
 			generate_html(f, item)
