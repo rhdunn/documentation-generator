@@ -40,6 +40,11 @@ class Identifier(Token):
 		Token.__init__(self, value)
 
 
+class Keyword(Token):
+	def __init__(self, value):
+		Token.__init__(self, value)
+
+
 class Literal(Token):
 	def __init__(self, value):
 		Token.__init__(self, value)
@@ -65,9 +70,95 @@ class HexadecimalLiteral(IntegerLiteral):
 		IntegerLiteral.__init__(self, value)
 
 
+_keywords = [
+	'alignas',		# C++11
+	'alignof',		# C++11
+	'and',
+	'and_eq',
+	'asm',
+	'auto',
+	'bitand',
+	'bitor',
+	'bool',
+	'break',
+	'case',
+	'catch',
+	'char',
+	'char16_t',		# C++11
+	'char32_t',		# C++11
+	'class',
+	'compl',
+	'const',
+	'constexpr',		# C++11
+	'const_cast',
+	'continue',
+	'decltype',		# C++11
+	'default',
+	'delete',
+	'do',
+	'double',
+	'dynamic_cast',
+	'else',
+	'enum',
+	'explicit',
+	'export',
+	'extern',
+	'false',
+	'float',
+	'for',
+	'friend',
+	'goto',
+	'if',
+	'inline',
+	'int',
+	'long',
+	'mutable',
+	'namespace',
+	'new',
+	'noexcept',		# C++11
+	'not',
+	'not_eq',
+	'nullptr',		# C++11
+	'operator',
+	'or',
+	'or_eq',
+	'private',
+	'protected',
+	'public',
+	'register',
+	'reinterpret_cast',
+	'return',
+	'short',
+	'signed',
+	'sizeof',
+	'static',
+	'static_assert',	# C++11
+	'static_cast',
+	'struct',
+	'switch',
+	'template',
+	'this',
+	'thread_local',		# C++11
+	'throw',
+	'true',
+	'try',
+	'typedef',
+	'typeid',
+	'typename',
+	'union',
+	'unsigned',
+	'virtual',
+	'void',
+	'volatile',
+	'wchar_t',
+	'while',
+	'xor',
+	'xor_eq',
+]
 _integer_suffix = '([uU](ll|LL|l|L)?|(ll|LL|l|L)[uU]?)' # 2.13.1 [lex.icon]
 _tokens = [
 	(re.compile('\\s+'), WhiteSpace),
+	(re.compile(r'(%s)\b' % '|'.join(_keywords)), Keyword), # 2.11 [lex.key]
 	(re.compile('[a-zA-Z_][a-zA-Z0-9_]*'), Identifier), # 2.10 [lex.name]
 	(re.compile('0x[0-9a-fA-F]+%s?' % _integer_suffix), HexadecimalLiteral), # 2.13.1 [lex.icon]
 	(re.compile('0[0-7]*%s?'        % _integer_suffix), OctalLiteral), # 2.13.1 [lex.icon]
@@ -106,6 +197,9 @@ if __name__ == '__main__':
 	]
 	for ident in identifiers:
 		tokenizer_testcases.append((ident, [Identifier(ident)]))
+	# 2.11 [lex.key]
+	for keyword in _keywords:
+		tokenizer_testcases.append((keyword, [Keyword(keyword)]))
 	# 2.13.1 [lex.icon]
 	integer_suffix = ['',
 		'u',  'ul',  'uL',  'ull', 'uLL', 'U', 'Ul', 'UL', 'Ull', 'ULL',
