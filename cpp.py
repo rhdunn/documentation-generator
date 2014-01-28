@@ -146,6 +146,7 @@ _keywords = [ # 2.11 [lex.key]
 _integer_suffix = '([uU](ll|LL|l|L)?|(ll|LL|l|L)[uU]?)' # 2.13.1 [lex.icon]
 _tokens = [
 	(re.compile('\\s+'), WhiteSpace, None),
+	(re.compile('L?\'[^\']*\''), Literal, 'character'), # 2.13.2 [lex.ccon]
 	(re.compile('L?"[^"]*"'), Literal, 'string'), # 2.13.4 [lex.string]
 	(re.compile('(%s)\\b' % '|'.join(_keywords)), Keyword, None), # 2.11 [lex.key]
 	(re.compile('[a-zA-Z_][a-zA-Z0-9_]*'), Identifier, None), # 2.10 [lex.name]
@@ -252,11 +253,12 @@ if __name__ == '__main__':
 	for value in ['0x1', '0x123abc', '0xABC123']:
 		for suffix in integer_suffix:
 			tokenizer_testcases.append((value + suffix, [Literal(value + suffix, 'hexadecimal')]))
+	# 2.13.2 [lex.ccon]
+	characters = ["'a'", "'\\0'", "L'a'", "L'\\0'"]
+	for c in characters:
+		tokenizer_testcases.append((c, [Literal(c, 'character')]))
 	# 2.13.4 [lex.string]
-	strings = [
-		'""',  '"abc"',
-		'L""', 'L"abc"',
-	]
+	strings = ['""', '"abc"', 'L""', 'L"abc"']
 	for s in strings:
 		tokenizer_testcases.append((s, [Literal(s, 'string')]))
 
