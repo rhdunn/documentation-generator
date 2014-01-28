@@ -128,12 +128,14 @@ def parse_doxygen(filename):
 
 
 if __name__ == '__main__':
-	def print_item(f, item, level=0):
-		if not item:
+	def generate_html(f, item):
+		if not item or item.scope != 'public':
 			return
-		f.write('%s%s [%s|%s]\n' % (('... '*level), item.signature, item.scope, item.ref))
+		f.write('<div><code>%s</code></div>\n' % item.signature)
+		f.write('<blockquote>\n')
 		for child in item.items:
-			print_item(f, child, level+1)
+			generate_html(f, child)
+		f.write('</blockquote>\n')
 
 	items = []
 	for filename in sys.argv[1:]:
@@ -148,6 +150,7 @@ if __name__ == '__main__':
 	for item in items:
 		with open(os.path.join(rootdir, '%s.html' % item.ref), 'w') as f:
 			f.write('<!DOCTYPE html>\n')
-			f.write('<pre>\n')
-			print_item(f, item)
-			f.write('</pre>\n')
+			f.write('<style type="text/css">\n')
+			f.write('    blockquote { margin-top: 0; margin-bottom: 0; }\n')
+			f.write('</style>\n')
+			generate_html(f, item)
