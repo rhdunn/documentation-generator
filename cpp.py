@@ -194,7 +194,7 @@ def match_token(text, pos):
 	return None, None
 
 
-def tokenizer(text):
+def tokenize(text):
 	pos = 0
 	while pos < len(text):
 		token, end = match_token(text, pos)
@@ -205,7 +205,7 @@ def tokenizer(text):
 
 
 def parse(text):
-	return list(tokenizer(text))
+	return list(tokenize(text))
 
 
 if __name__ == '__main__':
@@ -279,7 +279,7 @@ if __name__ == '__main__':
 	failed = 0
 	for text, result in tokenizer_testcases:
 		try:
-			got = repr(list(tokenizer(text)))
+			got = repr(list(tokenize(text)))
 		except:
 			got = None
 		expected = repr(result)
