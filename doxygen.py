@@ -47,6 +47,18 @@ def create_item(ref, scope):
 	return ret
 
 
+def _parse_templateparamlist_node(xml):
+	for child in xml:
+		if child.name == 'param':
+			typedef = child['type/text()']
+			declname = child['declname/text()']
+			if declname:
+				param = '%s %s' % (typedef, declname)
+			else:
+				param = typedef
+			yield param
+
+
 def _parse_enumvalue_node(xml):
 	value = create_item(xml['@id'], xml['@prot'])
 	for child in xml:
@@ -60,6 +72,7 @@ def _parse_memberdef_node(xml, item):
 	vartype = None
 	varname = None
 	args = None
+	template = ''
 	for child in xml:
 		if child.name == 'type':
 			vartype = child['text()']
@@ -69,20 +82,22 @@ def _parse_memberdef_node(xml, item):
 			args = child['text()']
 		elif child.name == 'enumvalue':
 			member.add(_parse_enumvalue_node(child))
+		elif child.name == 'templateparamlist':
+			template = 'template <%s> ' % ', '.join(_parse_templateparamlist_node(child))
 	if xml['@kind'] in ['enum']:
-		member.signature = cpp.parse('%s %s' % (xml['@kind'], varname))
+		member.signature = cpp.parse('%s%s %s' % (template, xml['@kind'], varname))
 	elif args:
 		if vartype:
 			if xml['@kind'] in ['@typedef']:
-				member.signature = cpp.parse('%s %s %s%s' % (xml['@kind'], vartype, varname, args))
+				member.signature = cpp.parse('%s%s %s %s%s' % (template, xml['@kind'], vartype, varname, args))
 			else:
-				member.signature = cpp.parse('%s %s%s' % (vartype, varname, args))
+				member.signature = cpp.parse('%s%s %s%s' % (template, vartype, varname, args))
 		else: # constructor/destructor
-			member.signature = cpp.parse('%s%s' % (varname, args))
+			member.signature = cpp.parse('%s%s%s' % (template, varname, args))
 	elif xml['@kind'] in ['typedef']:
-		member.signature = cpp.parse('%s %s %s' % (xml['@kind'], vartype, varname))
+		member.signature = cpp.parse('%s%s %s %s' % (template, xml['@kind'], vartype, varname))
 	else:
-		member.signature = cpp.parse('%s %s' % (vartype, varname))
+		member.signature = cpp.parse('%s%s %s' % (template, vartype, varname))
 	return member
 
 
@@ -98,7 +113,10 @@ def _parse_compounddef_node(xml):
 	item = create_item(xml['@id'], xml['@prot'])
 	for child in xml:
 		if child.name == 'compoundname':
-			item.signature = cpp.parse('%s %s' % (xml['@kind'], child['text()']))
+			signature = '%s %s' % (xml['@kind'], child['text()'])
+		elif child.name == 'templateparamlist':
+			params = ', '.join(_parse_templateparamlist_node(child))
+			signature = 'template <%s> %s' % (params, signature)
 		elif child.name == 'sectiondef':
 			_parse_sectiondef_node(child, item)
 		elif child.name in ['innerclass', 'innernamespace']:
@@ -114,6 +132,7 @@ def _parse_compounddef_node(xml):
 				else:
 					raise Exception('Unknown innerclass/innernamespace referenced kind.')
 			item.add(member)
+	item.signature = cpp.parse(signature)
 	return item
 
 
