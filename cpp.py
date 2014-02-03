@@ -204,8 +204,69 @@ def tokenize(text):
 		yield token
 
 
+class TokenList: # TODO: Remove this once parsing is complete
+	def __init__(self, tokenlist):
+		self.tokenlist = tokenlist
+
+	def __repr__(self):
+		return 'Tokens(%s)' % (repr(self.tokenlist))
+
+	def tokens(self):
+		return self.tokenlist
+
+
+class ScopedName:
+	def __init__(self, name):
+		self.name = name
+
+	def __repr__(self):
+		return 'ScopedName(%s)' % (repr(self.name))
+
+	def tokens(self):
+		for i, name in enumerate(self.name):
+			yield Identifier(name, None)
+			if i != len(self.name) - 1:
+				yield Operator('::', None)
+
+
+class Compound:
+	def __init__(self, kind, name):
+		self.kind = kind
+		self.name = name
+
+	def __repr__(self):
+		return 'Compound(%s|%s)' % (repr(self.name), self.kind)
+
+	def tokens(self):
+		yield Keyword(self.kind, None)
+		yield WhiteSpace(' ', None)
+		for token in self.name.tokens():
+			yield token
+
+
+def parse_name(tokens):
+	name = []
+	while 1:
+		if tokens[0].__class__.__name__ != 'Identifier':
+			raise Exception('Expected an identifier')
+		name.append(tokens[0].value)
+		if len(tokens) > 1 and tokens[1].value == '::':
+			tokens = tokens[2:]
+			continue
+		return ScopedName(name), tokens[1:]
+
+
 def parse(text):
-	return list(tokenize(text))
+	tokens = list(tokenize(text))
+	if tokens[0].__class__.__name__ == 'Keyword' and tokens[0].value in ['struct', 'class', 'namespace', 'enum']:
+		kind = tokens[0].value
+		if not tokens[1].__class__.__name__ == 'WhiteSpace':
+			raise Exception('Expected whitespace after struct/class/namespace/enum')
+		name, tokens = parse_name(tokens[2:])
+		if len(tokens) != 0:
+			raise Exception('Unexpected tokens after struct/class/namespace/enum declaration')
+		return Compound(kind, name)
+	return TokenList(tokens)
 
 
 if __name__ == '__main__':

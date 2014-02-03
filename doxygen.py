@@ -166,7 +166,7 @@ if __name__ == '__main__':
 		if not item or item.scope != 'public':
 			return
 		f.write('<div><code>')
-		generate_html_cpp_tokens(f, item.signature)
+		generate_html_cpp_tokens(f, item.signature.tokens())
 		f.write('</code></div>\n')
 		f.write('<blockquote>\n')
 		for child in item.items:
