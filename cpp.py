@@ -336,13 +336,37 @@ if __name__ == '__main__':
 	for s in strings:
 		testcases.append((tokenize, s, [Literal(s, 'string')]))
 
+	# class
+	testcases.append((parse, 'class test', Compound('class', ScopedName(['test']))))
+	testcases.append((parse, 'class a::klass', Compound('class', ScopedName(['a', 'klass']))))
+	testcases.append((parse, 'class one::two::klass', Compound('class', ScopedName(['one', 'two', 'klass']))))
+
+	# enum
+	testcases.append((parse, 'enum colours', Compound('enum', ScopedName(['colours']))))
+	testcases.append((parse, 'enum test::type', Compound('enum', ScopedName(['test', 'type']))))
+	testcases.append((parse, 'enum a::klass::id', Compound('enum', ScopedName(['a', 'klass', 'id']))))
+
+	# namespace
+	testcases.append((parse, 'namespace std', Compound('namespace', ScopedName(['std']))))
+	testcases.append((parse, 'namespace std::tr1', Compound('namespace', ScopedName(['std', 'tr1']))))
+	testcases.append((parse, 'namespace boost::algorithm::detail', Compound('namespace', ScopedName(['boost', 'algorithm', 'detail']))))
+
+	# struct
+	testcases.append((parse, 'struct test', Compound('struct', ScopedName(['test']))))
+	testcases.append((parse, 'struct a::klass', Compound('struct', ScopedName(['a', 'klass']))))
+	testcases.append((parse, 'struct one::two::klass', Compound('struct', ScopedName(['one', 'two', 'klass']))))
+
 	passed = 0
 	failed = 0
 	for parser, text, result in testcases:
 		try:
-			got = repr(list(parser(text)))
-		except:
-			got = None
+			ret = parser(text)
+			try:
+				got = repr(list(ret))
+			except TypeError:
+				got = repr(ret)
+		except Exception, e:
+			got = repr(e)
 		expected = repr(result)
 		if expected == got:
 			passed = passed + 1
