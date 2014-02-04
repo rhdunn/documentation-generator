@@ -270,9 +270,9 @@ def parse(text):
 
 
 if __name__ == '__main__':
-	tokenizer_testcases = []
+	testcases = []
 	for whitespace in [' ', '\t', '\r', '\n', '    ', ' \t\r\n']:
-		tokenizer_testcases.append((whitespace, [WhiteSpace(whitespace, None)]))
+		testcases.append((tokenize, whitespace, [WhiteSpace(whitespace, None)]))
 	# 2.10 [lex.name]
 	identifiers = [
 		'lowercase', 'UPPERCASE', 'MixedCase',
@@ -281,10 +281,10 @@ if __name__ == '__main__':
 		'a', 'A', '_',
 	]
 	for ident in identifiers:
-		tokenizer_testcases.append((ident, [Identifier(ident, None)]))
+		testcases.append((tokenize, ident, [Identifier(ident, None)]))
 	# 2.11 [lex.key]
 	for keyword in _keywords:
-		tokenizer_testcases.append((keyword, [Keyword(keyword, None)]))
+		testcases.append((tokenize, keyword, [Keyword(keyword, None)]))
 	# operators and punctuators
 	operators = [
 		# 2.3 [lex.trigraph]
@@ -300,7 +300,7 @@ if __name__ == '__main__':
 		'<=', '>=', '&&', '||', '++', '--',  ',',   '->*', '->',
 	]
 	for op in operators:
-		tokenizer_testcases.append((op, [Operator(op, None)]))
+		testcases.append((tokenize, op, [Operator(op, None)]))
 	# 2.13.1 [lex.icon]
 	integer_suffix = ['',
 		'u',  'ul',  'uL',  'ull', 'uLL', 'U', 'Ul', 'UL', 'Ull', 'ULL',
@@ -309,17 +309,17 @@ if __name__ == '__main__':
 	]
 	for value in ['0', '01234567']:
 		for suffix in integer_suffix:
-			tokenizer_testcases.append((value + suffix, [Literal(value + suffix, 'octal')]))
+			testcases.append((tokenize, value + suffix, [Literal(value + suffix, 'octal')]))
 	for value in ['1', '23']:
 		for suffix in integer_suffix:
-			tokenizer_testcases.append((value + suffix, [Literal(value + suffix, 'decimal')]))
+			testcases.append((tokenize, value + suffix, [Literal(value + suffix, 'decimal')]))
 	for value in ['0x1', '0x123abc', '0xABC123']:
 		for suffix in integer_suffix:
-			tokenizer_testcases.append((value + suffix, [Literal(value + suffix, 'hexadecimal')]))
+			testcases.append((tokenize, value + suffix, [Literal(value + suffix, 'hexadecimal')]))
 	# 2.13.2 [lex.ccon]
 	characters = ["'a'", "'\\0'", "L'a'", "L'\\0'"]
 	for c in characters:
-		tokenizer_testcases.append((c, [Literal(c, 'character')]))
+		testcases.append((tokenize, c, [Literal(c, 'character')]))
 	# 2.13.3 [lex.fcon]
 	float_suffix = ['', 'f', 'F', 'l', 'L']
 	fcon = [
@@ -330,24 +330,24 @@ if __name__ == '__main__':
 	]
 	for f in fcon:
 		for suffix in float_suffix:
-			tokenizer_testcases.append((f + suffix, [Literal(f + suffix, 'float')]))
+			testcases.append((tokenize, f + suffix, [Literal(f + suffix, 'float')]))
 	# 2.13.4 [lex.string]
 	strings = ['""', '"abc"', 'L""', 'L"abc"']
 	for s in strings:
-		tokenizer_testcases.append((s, [Literal(s, 'string')]))
+		testcases.append((tokenize, s, [Literal(s, 'string')]))
 
 	passed = 0
 	failed = 0
-	for text, result in tokenizer_testcases:
+	for parser, text, result in testcases:
 		try:
-			got = repr(list(tokenize(text)))
+			got = repr(list(parser(text)))
 		except:
 			got = None
 		expected = repr(result)
 		if expected == got:
 			passed = passed + 1
 		else:
-			print('test %s failed -- expected %s, got %s' % (repr(text), expected, got))
+			print('%s test %s failed -- expected %s, got %s' % (parser.__name__, repr(text), expected, got))
 			failed = failed + 1
 	print('passed : %d' % passed)
 	print('failed : %d' % failed)
