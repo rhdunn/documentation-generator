@@ -242,11 +242,13 @@ def parse_doxygen(filename):
 
 if __name__ == '__main__':
 	def print_etree(e, f=sys.stdout, terminator='\n'):
-		f.write('<{0}>'.format(e.tag))
+		args=''.join([' {0}="{1}"'.format(x, y) for x, y in e.attrib.items()])
+		f.write('<{0}{1}>'.format(e.tag, args))
 		f.write('{0}'.format(e.text))
 		for child in e:
 			print_etree(child, f=f, terminator='')
 		f.write('</{0}>{1}'.format(e.tag, terminator))
+		f.write('{0}'.format(e.tail))
 
 
 	def generate_html(f, ref, scope=None):
