@@ -33,6 +33,7 @@ class Item:
 		self.kind = kind
 		self.name = name.split('::')[-1]
 		self.qname = name
+		self.children = []
 
 	def __repr__(self):
 		return 'Item({0}, {1}, {2})'.format(self.protection, self.kind, self.name)
@@ -78,6 +79,21 @@ def create_item(ref, protection, kind, name):
 	_items[name] = ref
 
 
+def _parse_memberdef_node(xml, parent):
+	ref = create_item_ref(xml['@id'])
+	name = '::'.join([parent.item.qname, xml['name/text()']])
+	if '<' in name and '>' in name: # template specialization
+		name = name.split('<')[0]
+	create_item(ref, xml['@prot'], xml['@kind'], name)
+	parent.item.children.append(ref)
+
+
+def _parse_sectiondef_node(xml, parent):
+	for child in xml:
+		if child.name == 'memberdef':
+			_parse_memberdef_node(child, parent)
+
+
 def _parse_compounddef_node(xml):
 	if xml['@kind'] in ['file', 'dir', 'page']:
 		return None
@@ -85,6 +101,8 @@ def _parse_compounddef_node(xml):
 	for child in xml:
 		if child.name == 'compoundname':
 			create_item(ref, xml['@prot'], xml['@kind'], child['text()'])
+		elif child.name == 'sectiondef':
+			_parse_sectiondef_node(child, ref)
 	return ref
 
 
@@ -106,6 +124,11 @@ if __name__ == '__main__':
 			f.write(token.html)
 		f.write('</code></div>')
 		f.write('<hr>\n')
+		for child in ref.item.children:
+			f.write('<div><code>')
+			for token in child.item.signature():
+				f.write(token.html)
+			f.write('</code></div>')
 
 	items = []
 	for filename in sys.argv[1:]:
