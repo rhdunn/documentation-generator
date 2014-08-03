@@ -252,7 +252,7 @@ if __name__ == '__main__':
 				else:
 					f.write('<a href="{0}.html">{1}</a>'.format(ref.ref, e.text))
 			except KeyError:
-				sys.stderr.write('error: cross reference {0} not found\n'.format(e.text))
+				sys.stderr.write('error: cross reference {0} not found\n'.format(name))
 				f.write('{0}'.format(name))
 			f.write('{0}'.format(e.tail))
 			return
