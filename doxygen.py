@@ -93,8 +93,6 @@ if __name__ == '__main__':
 				f.write('<span class="literal">%s</span>' % token.value)
 
 	def generate_html(f, ref):
-		if not ref.item or ref.item.protection != 'public':
-			return
 		f.write('<div><code>{0}</code></div>'.format(repr(ref)))
 		f.write('<hr>\n')
 
@@ -109,6 +107,9 @@ if __name__ == '__main__':
 		os.mkdir(rootdir)
 
 	for item in items:
+		if not item.item or item.item.protection != 'public':
+			continue
+
 		with open(os.path.join(rootdir, '%s.html' % item.ref), 'w') as f:
 			f.write('<!DOCTYPE html>\n')
 			f.write('<style type="text/css">\n')
