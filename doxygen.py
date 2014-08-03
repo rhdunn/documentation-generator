@@ -52,13 +52,24 @@ class Function(Item):
 		self.args = {}
 
 
+class FunctionPointer(Function):
+	def __init__(self, protection, kind, name):
+		Function.__init__(self, protection, kind, name)
+
+
 def signature(item):
 	ret = []
 	if isinstance(item, Variable) or isinstance(item, Function):
+		if item.kind == 'typedef':
+			ret.append(cpplex.Keyword(item.kind))
+			ret.append(cpplex.WhiteSpace(' '))
 		ret.extend(item.vartype)
 	else:
 		ret.append(cpplex.Keyword(item.kind))
 	ret.append(cpplex.WhiteSpace(' '))
+	if isinstance(item, FunctionPointer):
+		ret.append(cpplex.Operator('('))
+		ret.append(cpplex.Operator('*'))
 	names = item.qname.split('::')
 	for n in range(1, len(names)):
 		scope = '::'.join(names[0:n])
@@ -66,6 +77,8 @@ def signature(item):
 		ret.append(sref)
 		ret.append(cpplex.Operator('::'))
 	ret.extend(cpplex.tokenize(item.name))
+	if isinstance(item, FunctionPointer):
+		ret.append(cpplex.Operator(')'))
 	if isinstance(item, Function):
 		ret.append(cpplex.Operator('('))
 		for i, arg in enumerate(item.args.values()):
@@ -102,13 +115,19 @@ def create_item_ref(ref):
 
 
 def create_item(ref, protection, kind, name):
-	if kind == 'variable':
+	if kind in ['variable', 'typedef']:
 		ref.item = Variable(protection, kind, name)
 	elif kind == 'function':
 		ref.item = Function(protection, kind, name)
 	else:
 		ref.item = Item(protection, kind, name)
 	_items[name] = ref
+
+
+def is_function_pointer(vartype):
+	if len(vartype) < 3:
+		return False
+	return vartype[-2].value == '(' and vartype[-1].value[-1] == '*'
 
 
 def _parse_type_node(xml):
@@ -129,13 +148,16 @@ def _parse_memberdef_node(xml, parent):
 		name = name.split('<')[0]
 	create_item(ref, xml['@prot'], xml['@kind'], name)
 	parent.item.children.append(ref)
-	argnum = 1
+	argnum = 0
 	for child in xml:
 		if child.name == 'type':
 			ref.item.vartype = _parse_type_node(child)
+			if is_function_pointer(ref.item.vartype):
+				item = ref.item
+				ref.item = FunctionPointer(ref.item.protection, ref.item.kind, ref.item.name)
+				ref.item.vartype = item.vartype[0:-2]
 		elif child.name == 'param':
 			argnum = argnum + 1
-
 			pname = child['declname/text()']
 			ptype = _parse_type_node(child['type'])
 			if not pname:
@@ -143,6 +165,34 @@ def _parse_memberdef_node(xml, parent):
 			p = Variable('public', 'parameter', pname)
 			p.vartype = ptype
 			ref.item.args[pname] = p
+		elif child.name == 'argsstring':
+			args = _parse_type_node(child)
+	if isinstance(ref.item, FunctionPointer) and len(ref.item.args) == 0 and len(args) != 0:
+		# doxygen does not parse function pointer arguments into param items,
+		# so we need to parse them here ...
+		if not args[0].value == ')' or not args[1].value == '(' or not args[-1].value == ')':
+			raise Exception('Invalid function pointer construct.')
+		args = args[2:]
+		param = []
+		argnum = 0
+		for token in args:
+			if token.value == ',' or token.value == ')':
+				argnum = argnum + 1
+				if isinstance(param[-1], cpplex.Identifier) and len(param) > 1:
+					pname = param[-1].value
+					param = param[:-1]
+				else:
+					pname = '__arg{0}'.format(argnum)
+				if isinstance(param[-1], cpplex.WhiteSpace):
+					param = param[:-1]
+				p = Variable('public', 'parameter', pname)
+				p.vartype = param
+				ref.item.args[pname] = p
+				param = []
+			elif len(param) == 0 and isinstance(token, cpplex.WhiteSpace):
+				pass
+			else:
+				param.append(token)
 
 
 def _parse_sectiondef_node(xml, parent):
