@@ -241,6 +241,10 @@ def parse_doxygen(filename):
 
 
 if __name__ == '__main__':
+	def escape(text):
+		return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+
 	def print_etree(e, f=sys.stdout, terminator='\n', scope=None):
 		if e.tag == 'a' and e.attrib.get('class', None) == 'crossref' and 'href' in e.attrib.keys():
 			name = e.attrib['href'].replace('^^', '')
@@ -248,21 +252,24 @@ if __name__ == '__main__':
 				ref = _items[name]
 				if e.text == '':
 					n = ref.item.qname
-					f.write('<a href="{0}.html">{1}</a>'.format(ref.ref, n))
+					f.write('<a href="{0}.html">{1}</a>'.format(ref.ref, escape(n)))
 				else:
-					f.write('<a href="{0}.html">{1}</a>'.format(ref.ref, e.text))
+					f.write('<a href="{0}.html">{1}</a>'.format(ref.ref, escape(e.text)))
 			except KeyError:
 				sys.stderr.write('error: cross reference {0} not found\n'.format(name))
-				f.write('{0}'.format(name))
-			f.write('{0}'.format(e.tail))
+				f.write('{0}'.format(escape(name)))
+			if e.tail != None:
+				f.write('{0}'.format(escape(e.tail)))
 			return
 		args=''.join([' {0}="{1}"'.format(x, y) for x, y in e.attrib.items()])
 		f.write('<{0}{1}>'.format(e.tag, args))
-		f.write('{0}'.format(e.text))
+		if e.text != None:
+			f.write('{0}'.format(escape(e.text)))
 		for child in e:
 			print_etree(child, f=f, terminator='', scope=scope)
 		f.write('</{0}>{1}'.format(e.tag, terminator))
-		f.write('{0}'.format(e.tail))
+		if e.tail != None:
+			f.write('{0}'.format(escape(e.tail)))
 
 
 	def generate_html(f, ref, scope=None):
