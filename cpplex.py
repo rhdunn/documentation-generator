@@ -34,22 +34,22 @@ class Token:
 
 
 class WhiteSpace(Token):
-	def __init__(self, value, kind):
+	def __init__(self, value, kind=None):
 		Token.__init__(self, value, kind)
 
 
 class Identifier(Token):
-	def __init__(self, value, kind):
+	def __init__(self, value, kind=None):
 		Token.__init__(self, value, kind)
 
 
 class Keyword(Token):
-	def __init__(self, value, kind):
+	def __init__(self, value, kind=None):
 		Token.__init__(self, value, kind)
 
 
 class Operator(Token):
-	def __init__(self, value, kind):
+	def __init__(self, value, kind=None):
 		Token.__init__(self, value, kind)
 
 

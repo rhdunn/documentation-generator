@@ -24,17 +24,31 @@ import xmlapi
 import cpplex
 
 
+_items = {}
+
+
 class Item:
 	def __init__(self, protection, kind, name):
 		self.protection = protection if protection else 'public'
 		self.kind = kind
-		self.name = name
+		self.name = name.split('::')[-1]
+		self.qname = name
 
 	def __repr__(self):
 		return 'Item({0}, {1}, {2})'.format(self.protection, self.kind, self.name)
 
 	def signature(self):
-		return list(cpplex.tokenize('{0} {1}'.format(self.kind, self.name)))
+		ret = []
+		ret.append(cpplex.Keyword(self.kind))
+		ret.append(cpplex.WhiteSpace(' '))
+		names = self.qname.split('::')
+		for n in range(1, len(names)):
+			scope = '::'.join(names[0:n])
+			sref = _items[scope]
+			ret.append(sref)
+			ret.append(cpplex.Operator('::'))
+		ret.append(cpplex.Identifier(self.name))
+		return ret
 
 
 class ItemRef:
@@ -57,6 +71,7 @@ def create_item_ref(ref):
 
 def create_item(ref, protection, kind, name):
 	ref.item = Item(protection, kind, name)
+	_items[name] = ref
 
 
 def _parse_compounddef_node(xml):
@@ -94,6 +109,8 @@ if __name__ == '__main__':
 				f.write('<span class="operator">%s</span>' % token.value)
 			elif name == 'Literal':
 				f.write('<span class="literal">%s</span>' % token.value)
+			elif name == 'ItemRef':
+				f.write('<a href="{0}.html">{1}</a>'.format(token.ref, token.item.name))
 
 	def generate_html(f, ref):
 		f.write('<div><code>')
