@@ -52,13 +52,17 @@ def create_item_ref(ref):
 	return ret
 
 
+def create_item(ref, protection, kind, name):
+	ref.item = Item(protection, kind, name)
+
+
 def _parse_compounddef_node(xml):
 	if xml['@kind'] in ['file', 'dir', 'page']:
 		return None
 	ref = create_item_ref(xml['@id'])
 	for child in xml:
 		if child.name == 'compoundname':
-			ref.item = Item(xml['@prot'], xml['@kind'], child['text()'])
+			create_item(ref, xml['@prot'], xml['@kind'], child['text()'])
 	return ref
 
 
