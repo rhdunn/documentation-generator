@@ -54,7 +54,7 @@ def _parse_compounddef_node(xml):
 	for child in xml:
 		if child.name == 'compoundname':
 			signature = '%s %s' % (xml['@kind'], child['text()'])
-	item.signature = cpp.parse(signature)
+	item.signature = list(cpp.tokenize(signature))
 	return item
 
 
@@ -88,7 +88,7 @@ if __name__ == '__main__':
 		if not item or item.scope != 'public':
 			return
 		f.write('<div><code>')
-		generate_html_cpp_tokens(f, item.signature.tokens())
+		generate_html_cpp_tokens(f, item.signature)
 		f.write('</code></div>\n')
 		f.write('<blockquote>\n')
 		for child in item.items:
