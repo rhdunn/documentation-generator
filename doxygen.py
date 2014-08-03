@@ -238,7 +238,7 @@ if __name__ == '__main__':
 		for token in signature(ref.item):
 			f.write(token.html)
 		f.write('</code></div>\n')
-		if ref.item.docs:
+		if ref.item.docs and ref.item.docs.brief != None:
 			f.write('<blockquote class="docs">\n')
 			print_etree(ref.item.docs.brief, f)
 			for doc in ref.item.docs.detailed:

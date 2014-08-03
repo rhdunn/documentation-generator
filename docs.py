@@ -44,8 +44,12 @@ class documentationProcessor(markdown.treeprocessors.Treeprocessor):
 		for e in root:
 			if e.tag == 'h1':
 				if e.attrib.get('class', None) == 'doc':
-					ref = self.items[e.text]
-					ref.item.docs = Documentation()
+					try:
+						ref = self.items[e.text]
+						ref.item.docs = Documentation()
+					except KeyError:
+						sys.stderr.write('error: item {0} not found\n'.format(e.text))
+						ref = None
 				else:
 					ref = None
 			elif ref:
