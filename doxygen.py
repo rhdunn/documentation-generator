@@ -25,37 +25,41 @@ import cpplex
 
 
 class Item:
-	def __init__(self, ref, scope):
+	def __init__(self, scope, kind, name):
+		self.scope = scope
+		self.kind = kind
+		self.name = name
+
+	def __repr__(self):
+		return 'Item({0}, {1}, {2})'.format(self.scope, self.kind, self.name)
+
+
+class ItemRef:
+	def __init__(self, ref):
 		self.ref = ref
-		if scope:
-			self.scope = scope
-		else:
-			self.scope = 'public'
-		self.signature = None
-		self.items = []
+		self.item = None
 
-	def add(self, item):
-		self.items.append(item)
+	def __repr__(self):
+		return 'ItemRef({0} => {1})'.format(self.ref, repr(self.item))
 
 
-_items = {}
-def create_item(ref, scope):
-	if ref in _items.keys():
-		return _items[ref]
-	ret = Item(ref, scope)
-	_items[ref] = ret
+_item_refs = {}
+def create_item_ref(ref):
+	if ref in _item_refs.keys():
+		return _item_refs[ref]
+	ret = ItemRef(ref)
+	_item_refs[ref] = ret
 	return ret
 
 
 def _parse_compounddef_node(xml):
 	if xml['@kind'] in ['file', 'dir', 'page']:
 		return None
-	item = create_item(xml['@id'], xml['@prot'])
+	ref = create_item_ref(xml['@id'])
 	for child in xml:
 		if child.name == 'compoundname':
-			signature = '%s %s' % (xml['@kind'], child['text()'])
-	item.signature = list(cpplex.tokenize(signature))
-	return item
+			ref.item = Item(xml['@prot'], xml['@kind'], child['text()'])
+	return ref
 
 
 def parse_doxygen(filename):
@@ -84,16 +88,11 @@ if __name__ == '__main__':
 			elif name == 'Literal':
 				f.write('<span class="literal">%s</span>' % token.value)
 
-	def generate_html(f, item):
-		if not item or item.scope != 'public':
+	def generate_html(f, ref):
+		if not ref.item or ref.item.scope != 'public':
 			return
-		f.write('<div><code>')
-		generate_html_cpp_tokens(f, item.signature)
-		f.write('</code></div>\n')
-		f.write('<blockquote>\n')
-		for child in item.items:
-			generate_html(f, child)
-		f.write('</blockquote>\n')
+		f.write('<div><code>{0}</code></div>'.format(repr(item)))
+		f.write('<hr>\n')
 
 	items = []
 	for filename in sys.argv[1:]:
