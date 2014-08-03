@@ -95,7 +95,7 @@ if __name__ == '__main__':
 	def generate_html(f, ref):
 		if not ref.item or ref.item.protection != 'public':
 			return
-		f.write('<div><code>{0}</code></div>'.format(repr(item)))
+		f.write('<div><code>{0}</code></div>'.format(repr(ref)))
 		f.write('<hr>\n')
 
 	items = []
