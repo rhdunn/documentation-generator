@@ -26,7 +26,7 @@ import cpplex
 
 class Item:
 	def __init__(self, protection, kind, name):
-		self.protection = protection
+		self.protection = protection if protection else 'public'
 		self.kind = kind
 		self.name = name
 
