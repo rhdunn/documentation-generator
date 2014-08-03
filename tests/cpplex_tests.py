@@ -22,7 +22,7 @@ import sys
 
 sys.path.append(os.path.join(sys.path[0], '..'))
 
-import cpp
+import cpplex
 
 passed = 0
 failed = 0
@@ -31,7 +31,7 @@ def run(text, result):
 	global passed
 	global failed
 	try:
-		got = repr(list(cpp.tokenize(text)))
+		got = repr(list(cpplex.tokenize(text)))
 	except Exception as e:
 		got = repr(e)
 	expected = repr(result)
@@ -47,14 +47,14 @@ def summary():
 	print('total  : %d' % (passed + failed))
 
 for whitespace in [' ', '\t', '\r', '\n', '    ', ' \t\r\n']:
-	run(whitespace, [cpp.WhiteSpace(whitespace, None)])
+	run(whitespace, [cpplex.WhiteSpace(whitespace, None)])
 
 # 2.3 [lex.trigraph]
 operators = [
 	'??=', '??/', '??\'', '??(', '??)', '??!', '??<', '??>', '??-',
 ]
 for op in operators:
-	run(op, [cpp.Operator(op, None)])
+	run(op, [cpplex.Operator(op, None)])
 
 # 2.10 [lex.name]
 identifiers = [
@@ -64,11 +64,11 @@ identifiers = [
 	'a', 'A', '_',
 ]
 for ident in identifiers:
-	run(ident, [cpp.Identifier(ident, None)])
+	run(ident, [cpplex.Identifier(ident, None)])
 
 # 2.11 [lex.key]
-for keyword in cpp._keywords:
-	run(keyword, [cpp.Keyword(keyword, None)])
+for keyword in cpplex._keywords:
+	run(keyword, [cpplex.Keyword(keyword, None)])
 
 # 2.12 [lex.operators]
 operators = [
@@ -82,7 +82,7 @@ operators = [
 	'<:', ':>', '<%', '%>', '%:', '%:%:',
 ]
 for op in operators:
-	run(op, [cpp.Operator(op, None)])
+	run(op, [cpplex.Operator(op, None)])
 
 # 2.13.1 [lex.icon]
 integer_suffix = ['',
@@ -92,18 +92,18 @@ integer_suffix = ['',
 ]
 for value in ['0', '01234567']:
 	for suffix in integer_suffix:
-		run(value + suffix, [cpp.Literal(value + suffix, 'octal')])
+		run(value + suffix, [cpplex.Literal(value + suffix, 'octal')])
 for value in ['1', '23']:
 	for suffix in integer_suffix:
-		run(value + suffix, [cpp.Literal(value + suffix, 'decimal')])
+		run(value + suffix, [cpplex.Literal(value + suffix, 'decimal')])
 for value in ['0x1', '0x123abc', '0xABC123']:
 	for suffix in integer_suffix:
-		run(value + suffix, [cpp.Literal(value + suffix, 'hexadecimal')])
+		run(value + suffix, [cpplex.Literal(value + suffix, 'hexadecimal')])
 
 # 2.13.2 [lex.ccon]
 characters = ["'a'", "'\\0'", "L'a'", "L'\\0'"]
 for c in characters:
-	run(c, [cpp.Literal(c, 'character')])
+	run(c, [cpplex.Literal(c, 'character')])
 
 # 2.13.3 [lex.fcon]
 float_suffix = ['', 'f', 'F', 'l', 'L']
@@ -115,11 +115,11 @@ fcon = [
 ]
 for f in fcon:
 	for suffix in float_suffix:
-		run(f + suffix, [cpp.Literal(f + suffix, 'float')])
+		run(f + suffix, [cpplex.Literal(f + suffix, 'float')])
 
 # 2.13.4 [lex.string]
 strings = ['""', '"abc"', 'L""', 'L"abc"']
 for s in strings:
-	run(s, [cpp.Literal(s, 'string')])
+	run(s, [cpplex.Literal(s, 'string')])
 
 summary()

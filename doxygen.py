@@ -21,7 +21,7 @@ import os
 import sys
 
 import xmlapi
-import cpp
+import cpplex
 
 
 class Item:
@@ -54,7 +54,7 @@ def _parse_compounddef_node(xml):
 	for child in xml:
 		if child.name == 'compoundname':
 			signature = '%s %s' % (xml['@kind'], child['text()'])
-	item.signature = list(cpp.tokenize(signature))
+	item.signature = list(cpplex.tokenize(signature))
 	return item
 
 
