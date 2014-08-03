@@ -64,9 +64,10 @@ def signature(item):
 			ret.append(cpplex.Keyword(item.kind))
 			ret.append(cpplex.WhiteSpace(' '))
 		ret.extend(item.vartype)
-	else:
+		ret.append(cpplex.WhiteSpace(' '))
+	elif item.kind != 'enumvalue':
 		ret.append(cpplex.Keyword(item.kind))
-	ret.append(cpplex.WhiteSpace(' '))
+		ret.append(cpplex.WhiteSpace(' '))
 	if isinstance(item, FunctionPointer):
 		ret.append(cpplex.Operator('('))
 		ret.append(cpplex.Operator('*'))
@@ -167,6 +168,11 @@ def _parse_memberdef_node(xml, parent):
 			ref.item.args[pname] = p
 		elif child.name == 'argsstring':
 			args = _parse_type_node(child)
+		elif child.name == 'enumvalue':
+			vref = create_item_ref(child['@id'])
+			vname = '::'.join([name, child['name/text()']])
+			create_item(vref, child['@prot'], 'enumvalue', vname)
+			ref.item.children.append(vref)
 	if isinstance(ref.item, FunctionPointer) and len(ref.item.args) == 0 and len(args) != 0:
 		# doxygen does not parse function pointer arguments into param items,
 		# so we need to parse them here ...
