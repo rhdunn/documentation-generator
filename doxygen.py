@@ -25,13 +25,13 @@ import cpplex
 
 
 class Item:
-	def __init__(self, scope, kind, name):
-		self.scope = scope
+	def __init__(self, protection, kind, name):
+		self.protection = protection
 		self.kind = kind
 		self.name = name
 
 	def __repr__(self):
-		return 'Item({0}, {1}, {2})'.format(self.scope, self.kind, self.name)
+		return 'Item({0}, {1}, {2})'.format(self.protection, self.kind, self.name)
 
 
 class ItemRef:
@@ -89,7 +89,7 @@ if __name__ == '__main__':
 				f.write('<span class="literal">%s</span>' % token.value)
 
 	def generate_html(f, ref):
-		if not ref.item or ref.item.scope != 'public':
+		if not ref.item or ref.item.protection != 'public':
 			return
 		f.write('<div><code>{0}</code></div>'.format(repr(item)))
 		f.write('<hr>\n')
