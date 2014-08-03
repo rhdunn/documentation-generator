@@ -22,6 +22,7 @@ import sys
 
 import xmlapi
 import cpplex
+import docs
 
 
 _items = {}
@@ -34,6 +35,7 @@ class Item:
 		self.name = name.split('::')[-1]
 		self.qname = name
 		self.children = []
+		self.docs = None
 
 	def __repr__(self):
 		return 'Item({0}, {1}, {2})'.format(self.protection, self.kind, self.name)
@@ -118,23 +120,40 @@ def parse_doxygen(filename):
 
 
 if __name__ == '__main__':
+	def print_etree(e, f=sys.stdout, terminator='\n'):
+		f.write('<{0}>'.format(e.tag))
+		f.write('{0}'.format(e.text))
+		for child in e:
+			print_etree(child, f=f, terminator='')
+		f.write('</{0}>{1}'.format(e.tag, terminator))
+
+
 	def generate_html(f, ref):
 		f.write('<div><code>')
 		for token in ref.item.signature():
 			f.write(token.html)
-		f.write('</code></div>')
-		f.write('<hr>\n')
-		for child in ref.item.children:
-			f.write('<div><code>')
-			for token in child.item.signature():
-				f.write(token.html)
-			f.write('</code></div>')
+		f.write('</code></div>\n')
+		if ref.item.docs:
+			f.write('<blockquote class="docs">\n')
+			print_etree(ref.item.docs.brief, f)
+			for doc in ref.item.docs.detailed:
+				print_etree(doc, f)
+			f.write('</blockquote>\n')
+		if len(ref.item.children) > 0:
+			f.write('<blockquote>\n')
+			for child in ref.item.children:
+				generate_html(f, child)
+			f.write('</blockquote>\n')
 
 	items = []
 	for filename in sys.argv[1:]:
-		item = parse_doxygen(filename)
-		if item:
-			items.append(item)
+		if filename.endswith('.xml'):
+			item = parse_doxygen(filename)
+			if item:
+				items.append(item)
+	for filename in sys.argv[1:]:
+		if filename.endswith('.md'):
+			docs.parse(filename, _items)
 
 	rootdir = 'docs/api/html'
 	if not os.path.exists(rootdir):
