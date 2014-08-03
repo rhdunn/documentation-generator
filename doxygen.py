@@ -241,12 +241,26 @@ def parse_doxygen(filename):
 
 
 if __name__ == '__main__':
-	def print_etree(e, f=sys.stdout, terminator='\n'):
+	def print_etree(e, f=sys.stdout, terminator='\n', scope=None):
+		if e.tag == 'a' and e.attrib.get('class', None) == 'crossref' and 'href' in e.attrib.keys():
+			name = e.attrib['href'].replace('^^', '')
+			try:
+				ref = _items[name]
+				if e.text == '':
+					n = ref.item.qname
+					f.write('<a href="{0}.html">{1}</a>'.format(ref.ref, n))
+				else:
+					f.write('<a href="{0}.html">{1}</a>'.format(ref.ref, e.text))
+			except KeyError:
+				sys.stderr.write('error: cross reference {0} not found\n'.format(e.text))
+				f.write('{0}'.format(name))
+			f.write('{0}'.format(e.tail))
+			return
 		args=''.join([' {0}="{1}"'.format(x, y) for x, y in e.attrib.items()])
 		f.write('<{0}{1}>'.format(e.tag, args))
 		f.write('{0}'.format(e.text))
 		for child in e:
-			print_etree(child, f=f, terminator='')
+			print_etree(child, f=f, terminator='', scope=scope)
 		f.write('</{0}>{1}'.format(e.tag, terminator))
 		f.write('{0}'.format(e.tail))
 
@@ -258,9 +272,9 @@ if __name__ == '__main__':
 		f.write('</code></div>\n')
 		if ref.item.docs and ref.item.docs.brief != None:
 			f.write('<blockquote class="docs">\n')
-			print_etree(ref.item.docs.brief, f)
+			print_etree(ref.item.docs.brief, f, scope=ref.item)
 			for doc in ref.item.docs.detailed:
-				print_etree(doc, f)
+				print_etree(doc, f, scope=ref.item)
 			f.write('</blockquote>\n')
 		if len(ref.item.children) > 0:
 			f.write('<blockquote>\n')
