@@ -40,18 +40,27 @@ class Item:
 	def __repr__(self):
 		return 'Item({0}, {1}, {2})'.format(self.protection, self.kind, self.name)
 
-	def signature(self):
-		ret = []
-		ret.append(cpplex.Keyword(self.kind))
-		ret.append(cpplex.WhiteSpace(' '))
-		names = self.qname.split('::')
-		for n in range(1, len(names)):
-			scope = '::'.join(names[0:n])
-			sref = _items[scope]
-			ret.append(sref)
-			ret.append(cpplex.Operator('::'))
-		ret.append(cpplex.Identifier(self.name))
-		return ret
+
+class Variable(Item):
+	def __init__(self, protection, kind, name):
+		Item.__init__(self, protection, kind, name)
+
+
+def signature(item):
+	ret = []
+	if isinstance(item, Variable):
+		ret.extend(item.vartype)
+	else:
+		ret.append(cpplex.Keyword(item.kind))
+	ret.append(cpplex.WhiteSpace(' '))
+	names = item.qname.split('::')
+	for n in range(1, len(names)):
+		scope = '::'.join(names[0:n])
+		sref = _items[scope]
+		ret.append(sref)
+		ret.append(cpplex.Operator('::'))
+	ret.extend(cpplex.tokenize(item.name))
+	return ret
 
 
 class ItemRef:
@@ -77,8 +86,22 @@ def create_item_ref(ref):
 
 
 def create_item(ref, protection, kind, name):
-	ref.item = Item(protection, kind, name)
+	if kind == 'variable':
+		ref.item = Variable(protection, kind, name)
+	else:
+		ref.item = Item(protection, kind, name)
 	_items[name] = ref
+
+
+def _parse_type_node(xml):
+	ret = []
+	for child in xml.children():
+		if child.name == '#text':
+			ret.extend(list(cpplex.tokenize(child.node.nodeValue)))
+		elif child.name == 'ref':
+			xref = create_item_ref(child['@refid'])
+			ret.append(xref)
+	return ret
 
 
 def _parse_memberdef_node(xml, parent):
@@ -88,6 +111,9 @@ def _parse_memberdef_node(xml, parent):
 		name = name.split('<')[0]
 	create_item(ref, xml['@prot'], xml['@kind'], name)
 	parent.item.children.append(ref)
+	for child in xml:
+		if child.name == 'type':
+			ref.item.vartype = _parse_type_node(child)
 
 
 def _parse_sectiondef_node(xml, parent):
@@ -130,7 +156,7 @@ if __name__ == '__main__':
 
 	def generate_html(f, ref):
 		f.write('<div><code>')
-		for token in ref.item.signature():
+		for token in signature(ref.item):
 			f.write(token.html)
 		f.write('</code></div>\n')
 		if ref.item.docs:
