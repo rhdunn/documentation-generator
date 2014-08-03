@@ -57,7 +57,16 @@ class FunctionPointer(Function):
 		Function.__init__(self, protection, kind, name)
 
 
-def signature(item):
+def get_scoped_name(item, scope):
+	a = item.qname.split('::')
+	b = scope.qname.split('::') if scope else []
+	for n in range(1, len(a)+1):
+		if n <= len(b) and a[n-1] == b[n-1]:
+			continue
+		yield a[n-1], '::'.join(a[0:n])
+
+
+def signature(item, scope):
 	ret = []
 	if isinstance(item, Variable) or isinstance(item, Function):
 		if item.kind == 'typedef':
@@ -71,13 +80,14 @@ def signature(item):
 	if isinstance(item, FunctionPointer):
 		ret.append(cpplex.Operator('('))
 		ret.append(cpplex.Operator('*'))
-	names = item.qname.split('::')
-	for n in range(1, len(names)):
-		scope = '::'.join(names[0:n])
-		sref = _items[scope]
-		ret.append(sref)
-		ret.append(cpplex.Operator('::'))
-	ret.extend(cpplex.tokenize(item.name))
+	names = list(get_scoped_name(item, scope))
+	for i, (name, qname) in enumerate(names):
+		if i < len(names) - 1:
+			sref = _items[qname]
+			ret.append(sref)
+			ret.append(cpplex.Operator('::'))
+		else:
+			ret.extend(cpplex.tokenize(name))
 	if isinstance(item, FunctionPointer):
 		ret.append(cpplex.Operator(')'))
 	if isinstance(item, Function):
@@ -239,9 +249,9 @@ if __name__ == '__main__':
 		f.write('</{0}>{1}'.format(e.tag, terminator))
 
 
-	def generate_html(f, ref):
+	def generate_html(f, ref, scope=None):
 		f.write('<div><code>')
-		for token in signature(ref.item):
+		for token in signature(ref.item, scope):
 			f.write(token.html)
 		f.write('</code></div>\n')
 		if ref.item.docs and ref.item.docs.brief != None:
@@ -254,7 +264,7 @@ if __name__ == '__main__':
 			f.write('<blockquote>\n')
 			for child in ref.item.children:
 				if child.item.protection == 'public':
-					generate_html(f, child)
+					generate_html(f, child, scope=ref.item)
 			f.write('</blockquote>\n')
 
 	items = []
