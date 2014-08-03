@@ -32,7 +32,7 @@ def run(text, result):
 	global failed
 	try:
 		got = repr(list(cpp.tokenize(text)))
-	except Exception, e:
+	except Exception as e:
 		got = repr(e)
 	expected = repr(result)
 	if expected == got:
