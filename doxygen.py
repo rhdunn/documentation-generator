@@ -33,6 +33,9 @@ class Item:
 	def __repr__(self):
 		return 'Item({0}, {1}, {2})'.format(self.protection, self.kind, self.name)
 
+	def signature(self):
+		return list(cpplex.tokenize('{0} {1}'.format(self.kind, self.name)))
+
 
 class ItemRef:
 	def __init__(self, ref):
@@ -93,7 +96,9 @@ if __name__ == '__main__':
 				f.write('<span class="literal">%s</span>' % token.value)
 
 	def generate_html(f, ref):
-		f.write('<div><code>{0}</code></div>'.format(repr(ref)))
+		f.write('<div><code>')
+		generate_html_cpp_tokens(f, ref.item.signature())
+		f.write('</code></div>')
 		f.write('<hr>\n')
 
 	items = []
