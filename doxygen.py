@@ -247,7 +247,8 @@ if __name__ == '__main__':
 		if len(ref.item.children) > 0:
 			f.write('<blockquote>\n')
 			for child in ref.item.children:
-				generate_html(f, child)
+				if child.item.protection == 'public':
+					generate_html(f, child)
 			f.write('</blockquote>\n')
 
 	items = []
