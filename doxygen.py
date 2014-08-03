@@ -242,7 +242,7 @@ def parse_doxygen(filename):
 
 if __name__ == '__main__':
 	def escape(text):
-		return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+		return text.encode('utf-8').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 
 	def print_etree(e, f=sys.stdout, terminator='\n', scope=None):
