@@ -46,9 +46,15 @@ class Variable(Item):
 		Item.__init__(self, protection, kind, name)
 
 
+class Function(Item):
+	def __init__(self, protection, kind, name):
+		Item.__init__(self, protection, kind, name)
+		self.args = {}
+
+
 def signature(item):
 	ret = []
-	if isinstance(item, Variable):
+	if isinstance(item, Variable) or isinstance(item, Function):
 		ret.extend(item.vartype)
 	else:
 		ret.append(cpplex.Keyword(item.kind))
@@ -60,6 +66,16 @@ def signature(item):
 		ret.append(sref)
 		ret.append(cpplex.Operator('::'))
 	ret.extend(cpplex.tokenize(item.name))
+	if isinstance(item, Function):
+		ret.append(cpplex.Operator('('))
+		for i, arg in enumerate(item.args.values()):
+			ret.extend(arg.vartype)
+			ret.append(cpplex.WhiteSpace(' '))
+			ret.append(cpplex.Identifier(arg.name))
+			if i != len(item.args) - 1:
+				ret.append(cpplex.Operator(','))
+				ret.append(cpplex.WhiteSpace(' '))
+		ret.append(cpplex.Operator(')'))
 	return ret
 
 
@@ -88,6 +104,8 @@ def create_item_ref(ref):
 def create_item(ref, protection, kind, name):
 	if kind == 'variable':
 		ref.item = Variable(protection, kind, name)
+	elif kind == 'function':
+		ref.item = Function(protection, kind, name)
 	else:
 		ref.item = Item(protection, kind, name)
 	_items[name] = ref
@@ -111,9 +129,20 @@ def _parse_memberdef_node(xml, parent):
 		name = name.split('<')[0]
 	create_item(ref, xml['@prot'], xml['@kind'], name)
 	parent.item.children.append(ref)
+	argnum = 1
 	for child in xml:
 		if child.name == 'type':
 			ref.item.vartype = _parse_type_node(child)
+		elif child.name == 'param':
+			argnum = argnum + 1
+
+			pname = child['declname/text()']
+			ptype = _parse_type_node(child['type'])
+			if not pname:
+				pname = '__arg{0}'.format(argnum)
+			p = Variable('public', 'parameter', pname)
+			p.vartype = ptype
+			ref.item.args[pname] = p
 
 
 def _parse_sectiondef_node(xml, parent):
