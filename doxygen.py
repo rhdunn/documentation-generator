@@ -59,6 +59,10 @@ class ItemRef:
 	def __repr__(self):
 		return 'ItemRef({0} => {1})'.format(self.ref, repr(self.item))
 
+	@property
+	def html(self):
+		return '<a href="{0}.html">{1}</a>'.format(self.ref, self.item.name)
+
 
 _item_refs = {}
 def create_item_ref(ref):
@@ -96,25 +100,10 @@ def parse_doxygen(filename):
 
 
 if __name__ == '__main__':
-	def generate_html_cpp_tokens(f, tokens):
-		for token in tokens:
-			name = token.__class__.__name__
-			if name == 'WhiteSpace':
-				f.write(token.value)
-			elif name == 'Identifier':
-				f.write('<span class="identifier">%s</span>' % token.value)
-			elif name == 'Keyword':
-				f.write('<span class="keyword">%s</span>' % token.value)
-			elif name == 'Operator':
-				f.write('<span class="operator">%s</span>' % token.value)
-			elif name == 'Literal':
-				f.write('<span class="literal">%s</span>' % token.value)
-			elif name == 'ItemRef':
-				f.write('<a href="{0}.html">{1}</a>'.format(token.ref, token.item.name))
-
 	def generate_html(f, ref):
 		f.write('<div><code>')
-		generate_html_cpp_tokens(f, ref.item.signature())
+		for token in ref.item.signature():
+			f.write(token.html)
 		f.write('</code></div>')
 		f.write('<hr>\n')
 

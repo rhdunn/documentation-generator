@@ -37,25 +37,45 @@ class WhiteSpace(Token):
 	def __init__(self, value, kind=None):
 		Token.__init__(self, value, kind)
 
+	@property
+	def html(self):
+		return self.value
+
 
 class Identifier(Token):
 	def __init__(self, value, kind=None):
 		Token.__init__(self, value, kind)
+
+	@property
+	def html(self):
+		return '<span class="identifier">%s</span>' % self.value
 
 
 class Keyword(Token):
 	def __init__(self, value, kind=None):
 		Token.__init__(self, value, kind)
 
+	@property
+	def html(self):
+		return '<span class="keyword">%s</span>' % self.value
+
 
 class Operator(Token):
 	def __init__(self, value, kind=None):
 		Token.__init__(self, value, kind)
 
+	@property
+	def html(self):
+		return '<span class="operator">%s</span>' % self.value
+
 
 class Literal(Token):
 	def __init__(self, value, kind):
 		Token.__init__(self, value, kind)
+
+	@property
+	def html(self):
+		return '<span class="literal %s">%s</span>' % (self.kind, self.value)
 
 
 _keywords = [ # 2.11 [lex.key]
