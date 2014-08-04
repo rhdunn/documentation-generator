@@ -2,7 +2,7 @@
 
 - [Usage](#usage)
 - [Markdown Support](#markdown-support)
-  - [cldoc-flavoured Markdown](#cldocflavoured-markdown)
+  - [cldoc-flavoured Markdown](#cldoc-flavoured-markdown)
   - [Docdown](#docdown)
     - [Type Documentation](#type-documentation)
     - [Cross References](#cross-references)
