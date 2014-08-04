@@ -389,6 +389,9 @@ if __name__ == '__main__':
 
 		with open(os.path.join(rootdir, '%s.html' % item.ref), 'w') as f:
 			f.write('<!DOCTYPE html>\n')
+			f.write('<html>\n')
+			f.write('<head>\n')
+			f.write('<title>{0} documentation</title>\n'.format(item.item.qname))
 			f.write('<style type="text/css">\n')
 			f.write('    table       { width: 100%; }')
 			f.write('    table tr td { vertical-align: top; border-bottom: 1px solid #EEE; }')
@@ -400,4 +403,8 @@ if __name__ == '__main__':
 			f.write('    .literal    { font-weight: normal; color: magenta; }\n')
 			f.write('    .return     { font-weight: bold;   color: black; }\n')
 			f.write('</style>\n')
+			f.write('</head>\n')
+			f.write('<body>\n')
 			generate_html(f, item)
+			f.write('</body>\n')
+			f.write('</html>\n')
