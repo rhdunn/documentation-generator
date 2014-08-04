@@ -310,7 +310,6 @@ if __name__ == '__main__':
 			f.write(token.html)
 		f.write('</code></p>\n')
 		if ref.item.docs and ref.item.docs.brief != None:
-			f.write('<blockquote class="docs">\n')
 			print_etree(ref.item.docs.brief, f, scope=ref.item)
 			if isinstance(ref.item, Function) and len(ref.item.args) > 0:
 				f.write('<table class="parameters">\n')
@@ -339,10 +338,8 @@ if __name__ == '__main__':
 					print_etree(doc, f, scope=ref.item)
 				f.write('</dd>\n')
 				f.write('</dl>\n')
-			f.write('</blockquote>\n')
 		if len(ref.item.children) > 0:
 			if ref.item.kind in ['enum', 'enumclass']:
-				f.write('<blockquote class="docs">\n')
 				f.write('<table class="enumeration">\n')
 				for child in ref.item.children:
 					f.write('<tr>\n')
@@ -358,7 +355,6 @@ if __name__ == '__main__':
 					f.write('</td>\n')
 					f.write('</tr>\n')
 				f.write('</table>\n')
-				f.write('</blockquote>\n')
 			elif recurse_children:
 				for child in ref.item.children:
 					if child.item.protection == 'public':
