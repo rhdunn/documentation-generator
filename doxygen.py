@@ -304,7 +304,7 @@ if __name__ == '__main__':
 			f.write('{0}'.format(escape(e.tail)))
 
 
-	def generate_html(f, ref, scope=None):
+	def generate_html(f, ref, scope=None, recurse_children=True):
 		f.write('<div><code>')
 		for token in signature(ref.item, scope):
 			f.write(token.html)
@@ -359,11 +359,11 @@ if __name__ == '__main__':
 					f.write('</tr>\n')
 				f.write('</table>\n')
 				f.write('</blockquote>\n')
-			else:
+			elif recurse_children:
 				f.write('<blockquote>\n')
 				for child in ref.item.children:
 					if child.item.protection == 'public':
-						generate_html(f, child, scope=ref.item)
+						generate_html(f, child, scope=ref.item, recurse_children=False)
 				f.write('</blockquote>\n')
 
 	items = []
