@@ -74,6 +74,11 @@ def signature(item, scope):
 			ret.append(cpplex.WhiteSpace(' '))
 		ret.extend(item.vartype)
 		ret.append(cpplex.WhiteSpace(' '))
+	elif item.kind == 'enumclass':
+		ret.append(cpplex.Keyword('enum'))
+		ret.append(cpplex.WhiteSpace(' '))
+		ret.append(cpplex.Keyword('class'))
+		ret.append(cpplex.WhiteSpace(' '))
 	elif item.kind != 'enumvalue':
 		ret.append(cpplex.Keyword(item.kind))
 		ret.append(cpplex.WhiteSpace(' '))
@@ -135,6 +140,20 @@ def create_item(ref, protection, kind, name):
 	_items[name] = ref
 
 
+_file_cache = {}
+def is_enum_class(xml):
+	# FIXME: Make 'enum class' detection more robust
+	filename = xml['@file']
+	line = int(xml['@line'])
+	if not filename in _file_cache.keys():
+		with open(filename) as f:
+			_file_cache[filename] = f.read().split('\n')
+	tokens = [x for x in list(cpplex.tokenize(_file_cache[filename][line - 2])) if not isinstance(x, cpplex.WhiteSpace)]
+	if tokens[0].value != 'enum':
+		raise Exception('Expected an enum declaration.')
+	return tokens[1].value == 'class'
+
+
 def is_function_pointer(vartype):
 	if len(vartype) < 3:
 		return False
@@ -159,6 +178,9 @@ def _parse_memberdef_node(xml, parent):
 		name = name.split('<')[0]
 	create_item(ref, xml['@prot'], xml['@kind'], name)
 	parent.item.children.append(ref)
+	# doxygen does not indicate if an enum is a C++11 scoped enum
+	if ref.item.kind == 'enum' and is_enum_class(xml['location']):
+		ref.item.kind = 'enumclass'
 	argnum = 0
 	for child in xml:
 		if child.name == 'type':
@@ -180,7 +202,10 @@ def _parse_memberdef_node(xml, parent):
 			args = _parse_type_node(child)
 		elif child.name == 'enumvalue':
 			vref = create_item_ref(child['@id'])
-			vname = '::'.join([name, child['name/text()']])
+			if ref.item.kind == 'enumclass':
+				vname = '::'.join([name, child['name/text()']])
+			else:
+				vname = '::'.join([parent.item.qname, child['name/text()']])
 			create_item(vref, child['@prot'], 'enumvalue', vname)
 			ref.item.children.append(vref)
 	if isinstance(ref.item, FunctionPointer) and len(ref.item.args) == 0 and len(args) != 0:
