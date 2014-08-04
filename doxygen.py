@@ -300,7 +300,7 @@ if __name__ == '__main__':
 			print_etree(child, f=f, terminator='', scope=scope)
 		if not inline:
 			f.write('</{0}>{1}'.format(e.tag, terminator))
-		if e.tail != None:
+		if e.tail != None and e.tail.strip() != '':
 			f.write('{0}'.format(escape(e.tail)))
 
 
