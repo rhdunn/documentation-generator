@@ -271,7 +271,7 @@ if __name__ == '__main__':
 
 
 	def print_etree(e, f=sys.stdout, terminator='\n', scope=None):
-		if e.tag == 'a' and e.attrib.get('class', None) == 'crossref' and 'href' in e.attrib.keys():
+		if e.tag == 'a' and 'href' in e.attrib.keys() and e.attrib['href'].startswith('^^'):
 			name = e.attrib['href'].replace('^^', '')
 			try:
 				ref = _items[name]

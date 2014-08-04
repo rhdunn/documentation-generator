@@ -50,7 +50,7 @@ class cldocPreProcessor(markdown.preprocessors.Preprocessor):
 							parts.append(ref)
 						else:
 							ref = ref[1:-1]
-							parts.append('[](^^{0}){{: .crossref }}'.format(ref))
+							parts.append('[](^^{0})'.format(ref))
 				else:
 					parts.append(text)
 			if len(parts) > 1:
