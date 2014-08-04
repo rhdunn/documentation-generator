@@ -78,7 +78,7 @@ class documentationProcessor(markdown.treeprocessors.Treeprocessor):
 			if e.tag == 'h1':
 				if e.attrib.get('class', None) == 'doc':
 					try:
-						ref = self.items[e.text]
+						ref = self.items[e.text][0]
 						ref.item.docs = Documentation()
 					except KeyError:
 						sys.stderr.write('error: item {0} not found\n'.format(e.text))

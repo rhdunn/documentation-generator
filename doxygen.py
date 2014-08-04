@@ -25,9 +25,6 @@ import cpplex
 import docs
 
 
-_items = {}
-
-
 class Item:
 	def __init__(self, protection, kind, name):
 		self.protection = protection if protection else 'public'
@@ -66,6 +63,9 @@ def get_scoped_name(item, scope):
 		yield a[n-1], '::'.join(a[0:n])
 
 
+_items = {}
+
+
 def signature(item, scope):
 	ret = []
 	if isinstance(item, Variable) or isinstance(item, Function):
@@ -89,7 +89,9 @@ def signature(item, scope):
 	for i, (name, qname) in enumerate(names):
 		if i < len(names) - 1:
 			sref = _items[qname]
-			ret.append(sref)
+			if len(sref) > 1:
+				raise Exception('{0} is ambiguous'.format(qname))
+			ret.append(sref[0])
 			ret.append(cpplex.Operator('::'))
 		else:
 			ret.extend(cpplex.tokenize(name))
@@ -137,7 +139,9 @@ def create_item(ref, protection, kind, name):
 		ref.item = Function(protection, kind, name)
 	else:
 		ref.item = Item(protection, kind, name)
-	_items[name] = ref
+	if not name in _items.keys():
+		_items[name] = []
+	_items[name].append(ref)
 
 
 _file_cache = {}
@@ -274,7 +278,7 @@ if __name__ == '__main__':
 		if e.tag == 'a' and 'href' in e.attrib.keys() and e.attrib['href'].startswith('^^'):
 			name = e.attrib['href'].replace('^^', '')
 			try:
-				ref = _items[name]
+				ref = _items[name][0]
 				if e.text == '':
 					n = ref.item.qname
 					f.write('<a href="{0}.html">{1}</a>'.format(ref.ref, escape(n)))
@@ -325,9 +329,10 @@ if __name__ == '__main__':
 		if filename.endswith('.md'):
 			docs.parse(filename, _items)
 
-	for qname, ref in sorted(_items.items()):
-		if not ref.item.docs and ref.item.protection == 'public':
-			sys.stderr.write('error: item {0} is not documented\n'.format(qname))
+	for qname, refs in sorted(_items.items()):
+		for ref in refs:
+			if not ref.item.docs and ref.item.protection == 'public':
+				sys.stderr.write('error: item {0} is not documented\n'.format(qname))
 
 	rootdir = 'docs/api/html'
 	if not os.path.exists(rootdir):
