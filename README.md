@@ -32,13 +32,13 @@ this is:
 
 First, run `doxygen` to generate the xml files:
 
-    doxygen
+    doxygen ${PATH_TO_DOXYGEN_CONFIG_FILE}
 
-Then run `doxygen.py` on the generated xml files:
+Then run `doxygen.py` on the generated xml files and the markdown documentation:
 
-    documentation-generator docs/api/xml/*.xml
+    ${PATH_TO_DOCUMENTATION_GENERATOR}/doxygen.py docs/api/xml/*.xml docs/api/src/*.md
 
-Then browse the generated HTML files:
+Then browse the generated html files:
 
     firefox docs/api/html
 
