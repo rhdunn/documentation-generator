@@ -316,7 +316,7 @@ if __name__ == '__main__':
 				f.write('<table class="parameters">\n')
 				for argname, arg in ref.item.args.items():
 					f.write('<tr>\n')
-					f.write('<td class="parameter"><code>{0}</code></td>\n'.format(argname))
+					f.write('<td><code><span class="identifier">{0}</span></code></td>\n'.format(argname))
 					f.write('<td>\n')
 					if arg.docs and arg.docs.brief != None:
 						if len(arg.docs.detailed) == 0:
@@ -341,11 +341,30 @@ if __name__ == '__main__':
 				f.write('</dl>\n')
 			f.write('</blockquote>\n')
 		if len(ref.item.children) > 0:
-			f.write('<blockquote>\n')
-			for child in ref.item.children:
-				if child.item.protection == 'public':
-					generate_html(f, child, scope=ref.item)
-			f.write('</blockquote>\n')
+			if ref.item.kind in ['enum', 'enumclass']:
+				f.write('<blockquote class="docs">\n')
+				f.write('<table class="enumeration">\n')
+				for child in ref.item.children:
+					f.write('<tr>\n')
+					f.write('<td><code><span class="identifier">{0}</span></code></td>\n'.format(child.item.name))
+					f.write('<td>\n')
+					if child.item.docs and child.item.docs.brief != None:
+						if len(child.item.docs.detailed) == 0:
+							print_etree(child.item.docs.brief, f, scope=ref.item, inline=True)
+						else:
+							print_etree(child.item.docs.brief, f, scope=ref.item)
+							for doc in child.item.docs.detailed:
+								print_etree(doc, f, scope=ref.item)
+					f.write('</td>\n')
+					f.write('</tr>\n')
+				f.write('</table>\n')
+				f.write('</blockquote>\n')
+			else:
+				f.write('<blockquote>\n')
+				for child in ref.item.children:
+					if child.item.protection == 'public':
+						generate_html(f, child, scope=ref.item)
+				f.write('</blockquote>\n')
 
 	items = []
 	for filename in sys.argv[1:]:
@@ -373,12 +392,14 @@ if __name__ == '__main__':
 		with open(os.path.join(rootdir, '%s.html' % item.ref), 'w') as f:
 			f.write('<!DOCTYPE html>\n')
 			f.write('<style type="text/css">\n')
-			f.write('    blockquote { margin-top: 0; margin-bottom: 0; }\n')
+			f.write('    table       { width: 100%; }')
+			f.write('    table tr td { vertical-align: top; border-bottom: 1px solid #EEE; }')
+			f.write('    table tr td * { margin-top: 0; }')
+			f.write('    blockquote  { margin-top: 0; margin-bottom: 0; }\n')
 			f.write('    .identifier { font-weight: normal; color: maroon; }\n')
 			f.write('    .keyword    { font-weight: bold;   color: green; }\n')
 			f.write('    .operator   { font-weight: normal; color: black; }\n')
 			f.write('    .literal    { font-weight: normal; color: magenta; }\n')
-			f.write('    .parameter  { font-weight: normal; color: maroon; }\n')
 			f.write('    .return     { font-weight: bold;   color: black; }\n')
 			f.write('</style>\n')
 			generate_html(f, item)
