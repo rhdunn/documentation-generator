@@ -71,25 +71,65 @@ class cldocPreProcessor(markdown.preprocessors.Preprocessor):
 class documentationProcessor(markdown.treeprocessors.Treeprocessor):
 	def __init__(self, items):
 		self.items = items
+		self.clear()
+
+	def clear(self):
+		self.refs = None
+		self.doc = None
+		self.param_doc = {}
+
+	def process_documentation(self):
+		item = self.refs[0].item
+		item.docs = self.doc
+		for argname, doc in self.param_doc.items():
+			if argname == 'return':
+				item.retdoc = doc
+				continue
+			try:
+				item.args[argname].docs = doc
+			except KeyError:
+				sys.stdout.write('error: parameter {0} does not exist on {1}\n'.format(argname, item.qname))
 
 	def run(self, root):
-		ref = None
 		for e in root:
 			if e.tag == 'h1':
 				if e.attrib.get('class', None) == 'doc':
+					if self.refs:
+						self.process_documentation()
 					try:
-						ref = self.items[e.text][0]
-						ref.item.docs = Documentation()
+						self.refs = self.items[e.text]
+						self.doc = Documentation()
+						self.param_doc = {}
 					except KeyError:
 						sys.stderr.write('error: item {0} not found\n'.format(e.text))
-						ref = None
+						self.clear()
 				else:
-					ref = None
-			elif ref:
-				if ref.item.docs.brief != None:
-					ref.item.docs.detailed.append(e)
+					self.clear()
+			elif e.tag == 'dl':
+				argname = None
+				argdoc = None
+				remove = []
+				for defn in e:
+					if defn.tag == 'dt':
+						if defn.text.startswith('@'):
+							argname = defn.text.replace('@', '')
+							argdoc = Documentation()
+							remove.append(defn)
+					elif argname != None:
+						# The dd node is the container of the documentation ...
+						defn.tag = 'p'
+						argdoc.brief = defn
+						self.param_doc[argname] = argdoc
+						remove.append(defn)
+						argname = None
+						argdoc = None
+				for item in remove:
+					e.remove(item)
+			elif self.doc:
+				if self.doc.brief != None:
+					self.doc.detailed.append(e)
 				else:
-					ref.item.docs.brief = e
+					self.doc.brief = e
 
 class Extension(markdown.extensions.Extension):
 	def __init__(self, items):

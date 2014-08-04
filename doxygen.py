@@ -47,6 +47,7 @@ class Function(Item):
 	def __init__(self, protection, kind, name):
 		Item.__init__(self, protection, kind, name)
 		self.args = {}
+		self.retdoc = None
 
 
 class FunctionPointer(Function):
@@ -274,7 +275,7 @@ if __name__ == '__main__':
 		return text.encode('utf-8').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 
-	def print_etree(e, f=sys.stdout, terminator='\n', scope=None):
+	def print_etree(e, f=sys.stdout, terminator='\n', scope=None, inline=False):
 		if e.tag == 'a' and 'href' in e.attrib.keys() and e.attrib['href'].startswith('^^'):
 			name = e.attrib['href'].replace('^^', '')
 			try:
@@ -290,13 +291,15 @@ if __name__ == '__main__':
 			if e.tail != None:
 				f.write('{0}'.format(escape(e.tail)))
 			return
-		args=''.join([' {0}="{1}"'.format(x, y) for x, y in e.attrib.items()])
-		f.write('<{0}{1}>'.format(e.tag, args))
+		if not inline:
+			args=''.join([' {0}="{1}"'.format(x, y) for x, y in e.attrib.items()])
+			f.write('<{0}{1}>'.format(e.tag, args))
 		if e.text != None:
 			f.write('{0}'.format(escape(e.text)))
 		for child in e:
 			print_etree(child, f=f, terminator='', scope=scope)
-		f.write('</{0}>{1}'.format(e.tag, terminator))
+		if not inline:
+			f.write('</{0}>{1}'.format(e.tag, terminator))
 		if e.tail != None:
 			f.write('{0}'.format(escape(e.tail)))
 
@@ -309,8 +312,33 @@ if __name__ == '__main__':
 		if ref.item.docs and ref.item.docs.brief != None:
 			f.write('<blockquote class="docs">\n')
 			print_etree(ref.item.docs.brief, f, scope=ref.item)
+			if isinstance(ref.item, Function) and len(ref.item.args) > 0:
+				f.write('<table class="parameters">\n')
+				for argname, arg in ref.item.args.items():
+					f.write('<tr>\n')
+					f.write('<td class="parameter"><code>{0}</code></td>\n'.format(argname))
+					f.write('<td>\n')
+					if arg.docs and arg.docs.brief != None:
+						if len(arg.docs.detailed) == 0:
+							print_etree(arg.docs.brief, f, scope=ref.item, inline=True)
+						else:
+							print_etree(arg.docs.brief, f, scope=ref.item)
+							for doc in arg.docs.detailed:
+								print_etree(doc, f, scope=ref.item)
+					f.write('</td>\n')
+					f.write('</tr>\n')
+				f.write('</table>\n')
 			for doc in ref.item.docs.detailed:
 				print_etree(doc, f, scope=ref.item)
+			if isinstance(ref.item, Function) and ref.item.retdoc and ref.item.retdoc.brief != None:
+				f.write('<dl>\n')
+				f.write('<dt class="return">Returns:</dt>\n')
+				f.write('<dd>\n')
+				print_etree(ref.item.retdoc.brief, f, scope=ref.item)
+				for doc in ref.item.retdoc.detailed:
+					print_etree(doc, f, scope=ref.item)
+				f.write('</dd>\n')
+				f.write('</dl>\n')
 			f.write('</blockquote>\n')
 		if len(ref.item.children) > 0:
 			f.write('<blockquote>\n')
@@ -350,5 +378,7 @@ if __name__ == '__main__':
 			f.write('    .keyword    { font-weight: bold;   color: green; }\n')
 			f.write('    .operator   { font-weight: normal; color: black; }\n')
 			f.write('    .literal    { font-weight: normal; color: magenta; }\n')
+			f.write('    .parameter  { font-weight: normal; color: maroon; }\n')
+			f.write('    .return     { font-weight: bold;   color: black; }\n')
 			f.write('</style>\n')
 			generate_html(f, item)
