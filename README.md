@@ -9,8 +9,6 @@
 The documentation generator project is designed to support documenting C++
 projects (including C++11 projects) using markdown.
 
-__NOTE__: This project is still under construction.
-
 It uses doxygen to parse the C++ code (processing the XML files that doxygen
 generates), but reads the documentation from markdown files. The rationale for
 this is:
