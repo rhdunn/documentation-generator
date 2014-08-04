@@ -33,20 +33,22 @@ class cldocPreProcessor(markdown.preprocessors.Preprocessor):
 	crossref = re.compile(r'(<[^>]*>)')
 
 	def run(self, lines):
-		for i, line in enumerate(lines):
+		ret = []
+		for line in lines:
 			# Convert cldoc headers to attr_list markdown format ...
 			if '<cldoc:' in line:
-				lines[i] = line.replace('<cldoc:', '').replace('>', ' {: .doc }')
+				ret.append(line.replace('<cldoc:', '').replace('>', ' {: .doc }'))
 				continue
 			# Ignore code blocks ....
 			if line.startswith('    ') or line.startswith('\t'):
+				ret.append(line)
 				continue
 			# Fixup cldoc cross-reference links ...
 			parts = []
-			for j, text in enumerate(self.inline_code.split(line)):
-				if j%2 == 0:
-					for k, ref in enumerate(self.crossref.split(text)):
-						if k%2 == 0:
+			for i, text in enumerate(self.inline_code.split(line)):
+				if i%2 == 0:
+					for j, ref in enumerate(self.crossref.split(text)):
+						if j%2 == 0:
 							parts.append(ref)
 						else:
 							ref = ref[1:-1]
@@ -54,9 +56,10 @@ class cldocPreProcessor(markdown.preprocessors.Preprocessor):
 				else:
 					parts.append(text)
 			if len(parts) > 1:
-				lines[i] = ''.join(parts)
-				continue
-		return lines
+				line = ''.join(parts)
+			# Anything else ...
+			ret.append(line)
+		return ret
 
 class documentationProcessor(markdown.treeprocessors.Treeprocessor):
 	def __init__(self, items):
