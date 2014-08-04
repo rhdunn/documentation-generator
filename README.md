@@ -5,6 +5,7 @@
   - [cldoc-flavoured Markdown](#cldoc-flavoured-markdown)
   - [Docdown](#docdown)
     - [Type Documentation](#type-documentation)
+    - [Parameter and Return Type Documentation](#parameter-and-return-type-documentation)
     - [Cross References](#cross-references)
 - [Bugs](#bugs)
 - [License Information](#license-information)
@@ -107,6 +108,24 @@ as a markdown section header with a `doc` class, i.e.:
 	Brief documentation
 
 	Detailed documentation
+
+### Parameter and Return Type Documentation
+
+To document parameters and return types of functions and methods, you need to
+use a definition list with the entry being `@parameter_name` for parameters or
+`@return` for the return type. For example:
+
+	@param1
+	: Parameter 1 documentation
+
+	@param2
+	: Parameter 2 documentation
+
+	@return
+	: The return type documentation
+
+These can occur anywhere in the detailed documentation section of a
+[Type Documentation](#type-documentation) block.
 
 ### Cross References
 

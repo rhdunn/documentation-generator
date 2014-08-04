@@ -35,7 +35,7 @@ class cldocPreProcessor(markdown.preprocessors.Preprocessor):
 	def run(self, lines):
 		ret = []
 		for line in lines:
-			# Convert cldoc headers to attr_list markdown format ...
+			# Convert cldoc headers to docdown type documentation format ...
 			if '<cldoc:' in line:
 				ret.append(line.replace('<cldoc:', '').replace('>', ' {: .doc }'))
 				continue
@@ -43,7 +43,7 @@ class cldocPreProcessor(markdown.preprocessors.Preprocessor):
 			if line.startswith('    ') or line.startswith('\t'):
 				ret.append(line)
 				continue
-			# Fixup cldoc cross-reference links ...
+			# Convert cldoc cross-reference links to docdown format ...
 			parts = []
 			for i, text in enumerate(self.inline_code.split(line)):
 				if i%2 == 0:
@@ -57,6 +57,13 @@ class cldocPreProcessor(markdown.preprocessors.Preprocessor):
 					parts.append(text)
 			if len(parts) > 1:
 				line = ''.join(parts)
+			# Convert cldoc parameter/return type documentation to docdown format ...
+			if line.startswith('@') and ' ' in line:
+				ret.append('')
+				words = line.split()
+				ret.append(words[0])
+				ret.append(': {0}'.format(' '.join(words[1:])))
+				continue
 			# Anything else ...
 			ret.append(line)
 		return ret
