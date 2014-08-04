@@ -325,6 +325,10 @@ if __name__ == '__main__':
 		if filename.endswith('.md'):
 			docs.parse(filename, _items)
 
+	for qname, ref in sorted(_items.items()):
+		if not ref.item.docs and ref.item.protection == 'public':
+			sys.stderr.write('error: item {0} is not documented\n'.format(qname))
+
 	rootdir = 'docs/api/html'
 	if not os.path.exists(rootdir):
 		os.mkdir(rootdir)
