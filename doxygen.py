@@ -360,11 +360,9 @@ if __name__ == '__main__':
 				f.write('</table>\n')
 				f.write('</blockquote>\n')
 			elif recurse_children:
-				f.write('<blockquote>\n')
 				for child in ref.item.children:
 					if child.item.protection == 'public':
 						generate_html(f, child, scope=ref.item, recurse_children=False)
-				f.write('</blockquote>\n')
 
 	items = []
 	for filename in sys.argv[1:]:
