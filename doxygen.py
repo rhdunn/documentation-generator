@@ -305,10 +305,10 @@ if __name__ == '__main__':
 
 
 	def generate_html(f, ref, scope=None, recurse_children=True):
-		f.write('<div><code>')
+		f.write('<p><code>')
 		for token in signature(ref.item, scope):
 			f.write(token.html)
-		f.write('</code></div>\n')
+		f.write('</code></p>\n')
 		if ref.item.docs and ref.item.docs.brief != None:
 			f.write('<blockquote class="docs">\n')
 			print_etree(ref.item.docs.brief, f, scope=ref.item)
