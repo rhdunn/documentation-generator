@@ -91,7 +91,7 @@ class documentationProcessor(markdown.treeprocessors.Treeprocessor):
 	def process_documentation(self):
 		matching = []
 		if len(self.refs) == 1:
-			item = self.refs[0].item
+			matching.append(self.refs[0].item)
 		else:
 			docargs = sorted([x for x in self.param_doc.keys() if x != 'return'])
 			matching = []
