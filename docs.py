@@ -89,6 +89,7 @@ class documentationProcessor(markdown.treeprocessors.Treeprocessor):
 		self.param_doc = {}
 
 	def process_documentation(self):
+		matching = []
 		if len(self.refs) == 1:
 			item = self.refs[0].item
 		else:
@@ -97,24 +98,23 @@ class documentationProcessor(markdown.treeprocessors.Treeprocessor):
 			for ref in self.refs:
 				args = sorted(ref.item.args.keys())
 				if equivalent(docargs, args):
-					matching.append(ref)
-			if len(matching) == 0:
-				sys.stdout.write('error: no matching {0} type found for the given parameters: {1}\n'.format(self.refs[0].item.qname, ', '.join(docargs)))
-				return
-			if len(matching) != 1:
-				sys.stdout.write('error: multiple matching {0} type found for the given parameters: {1}\n'.format(self.refs[0].item.qname, ', '.join(docargs)))
-				return
-			item = matching[0].item
+					matching.append(ref.item)
 
-		item.docs = self.doc
-		for argname, doc in self.param_doc.items():
-			if argname == 'return':
-				item.retdoc = doc
-				continue
-			try:
-				item.args[argname].docs = doc
-			except KeyError:
-				sys.stdout.write('error: parameter {0} does not exist on {1}\n'.format(argname, item.qname))
+		if len(matching) == 0:
+			docargs = sorted([x for x in self.param_doc.keys() if x != 'return'])
+			sys.stderr.write('error: no matching {0} type found for the given parameters: {1}\n'.format(self.refs[0].item.qname, ', '.join(docargs)))
+		for i, item in enumerate(matching):
+			if i == 1:
+				sys.stdout.write('info: multiple matching {0} type found for the given parameters: {1}\n'.format(self.refs[0].item.qname, ', '.join(docargs)))
+			item.docs = self.doc
+			for argname, doc in self.param_doc.items():
+				if argname == 'return':
+					item.retdoc = doc
+					continue
+				try:
+					item.args[argname].docs = doc
+				except KeyError:
+					sys.stdout.write('error: parameter {0} does not exist on {1}\n'.format(argname, item.qname))
 
 	def run(self, root):
 		for e in root:
