@@ -393,7 +393,7 @@ if __name__ == '__main__':
 			f.write('    table tr td { vertical-align: top; border-bottom: 1px solid #EEE; }')
 			f.write('    table tr td * { margin-top: 0; }')
 			f.write('    blockquote  { margin-top: 0; margin-bottom: 0; }\n')
-			f.write('    .identifier { font-weight: normal; color: maroon; }\n')
+			f.write('    .identifier { font-weight: normal; color: navy; }\n')
 			f.write('    .keyword    { font-weight: bold;   color: green; }\n')
 			f.write('    .operator   { font-weight: normal; color: black; }\n')
 			f.write('    .literal    { font-weight: normal; color: magenta; }\n')
