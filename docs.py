@@ -68,6 +68,16 @@ class cldocPreProcessor(markdown.preprocessors.Preprocessor):
 			ret.append(line)
 		return ret
 
+
+def equivalent(list1, list2):
+	if len(list1) != len(list2):
+		return False
+	for i in range(0, len(list1)):
+		if list1[i] != list2[i]:
+			return False
+	return True
+
+
 class documentationProcessor(markdown.treeprocessors.Treeprocessor):
 	def __init__(self, items):
 		self.items = items
@@ -79,7 +89,23 @@ class documentationProcessor(markdown.treeprocessors.Treeprocessor):
 		self.param_doc = {}
 
 	def process_documentation(self):
-		item = self.refs[0].item
+		if len(self.refs) == 1:
+			item = self.refs[0].item
+		else:
+			docargs = sorted([x for x in self.param_doc.keys() if x != 'return'])
+			matching = []
+			for ref in self.refs:
+				args = sorted(ref.item.args.keys())
+				if equivalent(docargs, args):
+					matching.append(ref)
+			if len(matching) == 0:
+				sys.stdout.write('error: no matching {0} type found for the given parameters: {1}\n'.format(self.refs[0].item.qname, ', '.join(docargs)))
+				return
+			if len(matching) != 1:
+				sys.stdout.write('error: multiple matching {0} type found for the given parameters: {1}\n'.format(self.refs[0].item.qname, ', '.join(docargs)))
+				return
+			item = matching[0].item
+
 		item.docs = self.doc
 		for argname, doc in self.param_doc.items():
 			if argname == 'return':
