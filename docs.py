@@ -96,7 +96,7 @@ class documentationProcessor(markdown.treeprocessors.Treeprocessor):
 			docargs = sorted([x for x in self.param_doc.keys() if x != 'return'])
 			matching = []
 			for ref in self.refs:
-				args = sorted(ref.item.args.keys())
+				args = sorted([x.name for x in ref.item.args])
 				if equivalent(docargs, args):
 					matching.append(ref.item)
 
@@ -112,7 +112,7 @@ class documentationProcessor(markdown.treeprocessors.Treeprocessor):
 					item.retdoc = doc
 					continue
 				try:
-					item.args[argname].docs = doc
+					item.arg(argname).docs = doc
 				except KeyError:
 					sys.stdout.write('error: parameter {0} does not exist on {1}\n'.format(argname, item.qname))
 

@@ -46,8 +46,14 @@ class Variable(Item):
 class Function(Item):
 	def __init__(self, protection, kind, name):
 		Item.__init__(self, protection, kind, name)
-		self.args = {}
+		self.args = []
 		self.retdoc = None
+
+	def arg(self, name):
+		for a in self.args:
+			if a.name == name:
+				return a
+		raise KeyError('argument %s not found' % name)
 
 
 class FunctionPointer(Function):
@@ -100,7 +106,7 @@ def signature(item, scope):
 		ret.append(cpplex.Operator(')'))
 	if isinstance(item, Function):
 		ret.append(cpplex.Operator('('))
-		for i, arg in enumerate(item.args.values()):
+		for i, arg in enumerate(item.args):
 			ret.extend(arg.vartype)
 			ret.append(cpplex.WhiteSpace(' '))
 			ret.append(cpplex.Identifier(arg.name))
@@ -202,7 +208,7 @@ def _parse_memberdef_node(xml, parent):
 				pname = '__arg{0}'.format(argnum)
 			p = Variable('public', 'parameter', pname)
 			p.vartype = ptype
-			ref.item.args[pname] = p
+			ref.item.args.append(p)
 		elif child.name == 'argsstring':
 			args = _parse_type_node(child)
 		elif child.name == 'enumvalue':
@@ -235,7 +241,7 @@ def _parse_memberdef_node(xml, parent):
 					param = param[:-1]
 				p = Variable('public', 'parameter', pname)
 				p.vartype = param
-				ref.item.args[pname] = p
+				ref.item.args.append(p)
 				param = []
 			elif len(param) == 0 and isinstance(token, cpplex.WhiteSpace):
 				pass
@@ -315,9 +321,9 @@ if __name__ == '__main__':
 			print_etree(ref.item.docs.brief, f, scope=ref.item)
 			if isinstance(ref.item, Function) and len(ref.item.args) > 0:
 				f.write('<table class="parameters">\n')
-				for argname, arg in ref.item.args.items():
+				for arg in ref.item.args:
 					f.write('<tr>\n')
-					f.write('<td><code><span class="identifier">{0}</span></code></td>\n'.format(argname))
+					f.write('<td><code><span class="identifier">{0}</span></code></td>\n'.format(arg.name))
 					f.write('<td>\n')
 					if arg.docs and arg.docs.brief != None:
 						if len(arg.docs.detailed) == 0:
