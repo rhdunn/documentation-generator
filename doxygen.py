@@ -222,7 +222,9 @@ def _parse_memberdef_node(xml, parent):
 		param = []
 		argnum = 0
 		for token in args:
-			if token.value == ',' or token.value == ')':
+			if token.value == ')' and len(param) == 0:
+				pass
+			elif token.value == ',' or token.value == ')':
 				argnum = argnum + 1
 				if isinstance(param[-1], cpplex.Identifier) and len(param) > 1:
 					pname = param[-1].value
