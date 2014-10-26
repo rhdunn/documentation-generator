@@ -158,6 +158,8 @@ class documentationProcessor(markdown.treeprocessors.Treeprocessor):
 					self.doc.detailed.append(e)
 				else:
 					self.doc.brief = e
+		if self.refs:
+			self.process_documentation()
 
 class Extension(markdown.extensions.Extension):
 	def __init__(self, items):
