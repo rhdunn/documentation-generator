@@ -130,6 +130,8 @@ class documentationProcessor(markdown.treeprocessors.Treeprocessor):
 						sys.stderr.write('error: item {0} not found\n'.format(e.text))
 						self.clear()
 				else:
+					if self.refs:
+						self.process_documentation()
 					self.clear()
 			elif e.tag == 'dl':
 				argname = None
