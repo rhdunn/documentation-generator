@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Copyright (C) 2014 Reece H. Dunn
+# Copyright (C) 2014-2015 Reece H. Dunn
 #
 # This file is part of documentation-generator.
 #
@@ -66,6 +66,31 @@ class cldocPreProcessor(markdown.preprocessors.Preprocessor):
 				continue
 			# Anything else ...
 			ret.append(line)
+		return ret
+
+class documentationPreProcessor(markdown.preprocessors.Preprocessor):
+	"""
+	Convert kramdown-style header IALs into Python markdown-style header IALs.
+
+	Kramdown uses block-level IALs for headers, while Python markdown uses
+	span-level IALs.
+	"""
+
+	def run(self, lines):
+		ret = []
+		header_line = None
+		for line in lines:
+			if line.startswith('#'):
+				header_line = line
+			elif header_line != None:
+				if line.startswith('{: ') and line.endswith(' }'):
+					ret.append('{0} {1}'.format(header_line, line))
+				else:
+					ret.append(header_line)
+					ret.append(line)
+				header_line = None
+			else:
+				ret.append(line)
 		return ret
 
 
@@ -167,6 +192,7 @@ class Extension(markdown.extensions.Extension):
 
 	def extendMarkdown(self, md, md_globals):
 		md.preprocessors.add('cldoc', cldocPreProcessor(), '_end')
+		md.preprocessors.add('docs', documentationPreProcessor(), '_end')
 		md.treeprocessors.add('docs', documentationProcessor(self.items), '_end')
 
 def parse(filename, items):
